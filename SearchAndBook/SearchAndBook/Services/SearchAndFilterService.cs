@@ -117,19 +117,19 @@ namespace SearchAndBook.Services
             {
                 var games = gamesRepository.GetGamesForFeedOthers(userId);
 
-                return games.Select(g =>
+                return games.Select(game =>
                 {
-                    var owner = usersRepository.Get(g.OwnerId);
+                    var owner = usersRepository.Get(game.OwnerId);
 
                     return new GameDTO
                     {
-                        GameId = g.GameId,
-                        Name = g.Name,
-                        Image = g.Image,
-                        Price = g.Price,
+                        GameId = game.GameId,
+                        Name = game.Name,
+                        Image = game.Image,
+                        Price = game.Price,
                         City = owner?.City ?? string.Empty,
-                        MinimumPlayerNumber = g.MinimumPlayerNumber,
-                        MaximumPlayerNumber = g.MaximumPlayerNumber
+                        MinimumPlayerNumber = game.MinimumPlayerNumber,
+                        MaximumPlayerNumber = game.MaximumPlayerNumber
                     };
                 }).ToArray();
             }
