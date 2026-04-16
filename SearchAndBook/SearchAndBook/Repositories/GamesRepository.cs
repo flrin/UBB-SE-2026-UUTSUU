@@ -1,4 +1,5 @@
-﻿using System;
+﻿namespace SearchAndBook.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Data.SqlClient;
@@ -6,26 +7,22 @@ using SearchAndBook.Domain;
 using SearchAndBook.Repositories.Sql;
 using SearchAndBook.Shared;
 
-namespace SearchAndBook.Repositories;
-
+/// <summary>
 /// Repository responsible for reading game/listing data from the database.
 /// Important:
 /// - This repository only reads data.
 /// - It is used by the service layer, not directly by the UI.
-/// 
-
-
 /// How ADO.NET handles connections : 
-/// - When you write using var connection = new SqlConnection(...) and call .Open(), Microsoft 
-/// checks the pool, so the pool of connections is handled by .net
+/// - When you write using var connection = new SqlConnection(...) and call .Open(), Microsoft checks the pool, so the pool of connections is handled by .net
 /// - If there is a free connection, it gives it to you.
 /// - When your "using" block finishes, it calls .Close().
-/// - Microsoft intercepts your .Close() command. It doesn't actually destroy the connection 
-/// to the database. It just wipes the data clean and parks it back in the hidden pool for 
-/// the next person to use.
-
+/// - Microsoft intercepts your .Close() command. It doesn't actually destroy the connection to the database. It just wipes the data clean and parks it back in the hidden pool for.  the next person to use.
+/// </summary>
 public class GamesRepository : InterfaceGamesRepository
 {
+    /// <summary>
+    /// Represents the ID used for unauthenticated users.
+    /// </summary>
     public const int AnonimousUserId = -1;
 
     // Used to convert game data to Game object
@@ -74,7 +71,10 @@ public class GamesRepository : InterfaceGamesRepository
         }
     }
 
+    /// <summary>
     /// Gets all active games that are visible in the system.
+    /// </summary>
+   
     public List<Game> GetAllGames()
     {
         try
@@ -87,7 +87,9 @@ public class GamesRepository : InterfaceGamesRepository
         }
     }
 
+    /// <summary>
     /// Gets games that match the provided filter criteria.
+    /// </summary>
     /// <param name="filter">
     /// Object containing user-entered search/filter values.
     /// All fields may be empty/null.
@@ -98,7 +100,6 @@ public class GamesRepository : InterfaceGamesRepository
     /// - search page
     /// - filter panel
     /// - search + filters combined
-    /// 
     /// Behavior:
     /// - null/empty fields are ignored
     /// - only active games are returned
@@ -119,10 +120,8 @@ public class GamesRepository : InterfaceGamesRepository
             command.Parameters.AddWithValue("@City", string.IsNullOrWhiteSpace(filter.City) ? DBNull.Value : filter.City);
             command.Parameters.AddWithValue("@MaxPrice", filter.MaximumPrice.HasValue ? filter.MaximumPrice.Value : DBNull.Value);
             command.Parameters.AddWithValue("@PlayerCount", filter.PlayerCount.HasValue ? filter.PlayerCount.Value : DBNull.Value);
-            command.Parameters.AddWithValue("@RequestedStartDate",
-                filter.AvailabilityRange != null ? filter.AvailabilityRange.StartTime : DBNull.Value);
-            command.Parameters.AddWithValue("@RequestedEndDate",
-                filter.AvailabilityRange != null ? filter.AvailabilityRange.EndTime : DBNull.Value);
+            command.Parameters.AddWithValue("@RequestedStartDate",filter.AvailabilityRange != null ? filter.AvailabilityRange.StartTime : DBNull.Value);
+            command.Parameters.AddWithValue("@RequestedEndDate",filter.AvailabilityRange != null ? filter.AvailabilityRange.EndTime : DBNull.Value);
             command.Parameters.AddWithValue("@UserId", filter.UserId.HasValue ? filter.UserId.Value : -1);
 
             using var reader = command.ExecuteReader();

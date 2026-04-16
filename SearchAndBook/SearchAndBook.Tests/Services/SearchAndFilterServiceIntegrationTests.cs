@@ -260,6 +260,82 @@ public class SearchAndFilterServiceIntegrationTests
                 .ToList();
         }
 
+
+
+        [Fact]
+        public void GetDiscoveryFeedPaged_ExcludesInactiveAndBookedGames()
+        {
+            var rentalsRepository = new InMemoryRentalsRepository();
+
+            var games = new List<Game>
+            {
+            CreateGame(1, 1, "ActiveAvailable", 10m, 4, 2),
+
+            new Game
+            {
+                GameId = 2,
+                OwnerId = 1,
+                Name = "Inactive",
+                Price = 10m,
+                MaximumPlayerNumber = 4,
+                MinimumPlayerNumber = 2,
+                Description = "Test",
+                IsActive = false
+            },
+
+            CreateGame(3, 1, "Booked", 10m, 4, 2)
+             };
+            rentalsRepository.SetAvailability(3, false);
+
+            var service = new SearchAndFilterService(
+                new InMemoryGamesRepository(games),
+                new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
+                rentalsRepository,
+                new InMemoryGeographicalService());
+
+            var (available, others, total) = service.GetDiscoveryFeedPaged(1, 1, 10);
+
+            var all = available.Concat(others).ToList();
+
+            Assert.Single(all);
+            Assert.Equal(1, all[0].GameId);
+        }
+
+        [Fact]
+        public void GetDiscoveryFeedPaged_AvailableTonight_ContainsOnlyTodayAndTomorrow()
+        {
+            var rentalsRepository = new InMemoryRentalsRepository();
+
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            var future = today.AddDays(5);
+
+            var games = new List<Game>
+    {
+        CreateGame(1, 1, "TodayGame", 10m, 4, 2),
+        CreateGame(2, 1, "TomorrowGame", 10m, 4, 2),
+        CreateGame(3, 1, "FutureGame", 10m, 4, 2)
+    };
+            rentalsRepository.SetAvailability(1, true); // today
+            rentalsRepository.SetAvailability(2, true); // tomorrow
+            rentalsRepository.SetAvailability(3, true); // future
+
+            var service = new SearchAndFilterService(
+                new InMemoryGamesRepository(games),
+                new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
+                rentalsRepository,
+                new InMemoryGeographicalService());
+
+            var (availableTonight, others, total) =
+                service.GetDiscoveryFeedPaged(1, 1, 10);
+
+            var availableIds = availableTonight.Select(g => g.GameId).ToList();
+
+            Assert.Contains(1, availableIds);
+            Assert.Contains(2, availableIds);
+            Assert.DoesNotContain(3, availableIds);
+        }
+
         [Fact]
         public void GetDiscoveryFeedPaged_ReturnsCorrectPageSize()
         {
@@ -343,6 +419,30 @@ public class SearchAndFilterServiceIntegrationTests
             Assert.Empty(available);
             Assert.Empty(others);
             Assert.Equal(0, total);
+        }
+        [Fact]
+        public void GetDiscoveryFeedPaged_OthersContainsRemainingGames()
+        {
+            var rentalsRepository = new InMemoryRentalsRepository();
+
+            var games = new List<Game>
+            {
+                CreateGame(1, 1, "Game1", 10m, 4, 2),
+                CreateGame(2, 1, "Game2", 10m, 4, 2)
+            };
+
+            var service = new SearchAndFilterService(
+                new InMemoryGamesRepository(games),
+                new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
+                rentalsRepository,
+                new InMemoryGeographicalService());
+
+            var (available, others, _) = service.GetDiscoveryFeedPaged(1, 1, 10);
+
+            var availableIds = available.Select(g => g.GameId);
+            var othersIds = others.Select(g => g.GameId);
+            Assert.False(availableIds.Intersect(othersIds).Any());
+            Assert.Equal(games.Count, available.Count + others.Count);
         }
 
         [Fact]
