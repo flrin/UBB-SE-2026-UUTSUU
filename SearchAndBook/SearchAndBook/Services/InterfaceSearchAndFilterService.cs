@@ -42,11 +42,11 @@ namespace SearchAndBook.Services
         /// <exception cref="InvalidOperationException">Thrown when filtering fails.</exception>
         GameDTO[] ApplyFilters(GameDTO[] games, FilterCriteria filter);
 
-
         (List<GameDTO> availableTonight, List<GameDTO> others, int totalAvailableGamesCount)
         GetDiscoveryFeedPaged(int userId, int page, int pageSize);
 
         bool IsValidDateRange(DateTime? start, DateTime? end);
+
         bool IsValidPlayersCount(int? players);
 
         void UpdateFilterFromUI(FilterCriteria filter,double selectedMaxPrice,double selectedMinPlayers,DateTime? startDate,DateTime? endDate);

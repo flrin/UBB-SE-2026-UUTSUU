@@ -64,7 +64,7 @@ namespace SearchAndBook.Services
                         Price = game.Price,
                         City = gameowner != null ? gameowner.City : string.Empty,
                         MaximumPlayerNumber = game.MaximumPlayerNumber,
-                        MinimumPlayerNumber = game.MinimumPlayerNumber,
+                        MinimumPlayerNumber = game.MinimumPlayerNumber
                     };
 
                     gameResults.Add(gameDto);
@@ -76,6 +76,7 @@ namespace SearchAndBook.Services
 
                 //// this is if we decide to only use this methode and remove the ApplyFilters method
                 //// only runs this code if SortOption is set, so never from feed
+
 
                 return ApplyFilters(gameResultsAray, filter);
             }
@@ -100,9 +101,13 @@ namespace SearchAndBook.Services
 
                 foreach (var game in games)
                 {
-                    var user = this.usersRepository.Get(game.OwnerId);
-                    var dto = MapToGameDTO(game, user);
-                    result.Add(dto);
+                    var user = this.usersRepository.GetGameById(game.OwnerId);
+
+                    if (user != null)
+                    {
+                        var dto = MapToGameDTO(game, user);
+                        result.Add(dto);
+                    }
                 }
 
                 return result.ToArray();
@@ -124,10 +129,13 @@ namespace SearchAndBook.Services
             {
                 var games = this.gamesRepository.GetGamesForFeedOthers(userId);
                 var result = new List<GameDTO>();
-
                 foreach (var game in games)
                 {
-                    var user = this.usersRepository.Get(game.OwnerId);
+                    var user = this.usersRepository.GetGameById(game.OwnerId);
+
+                    if (user == null)
+                        continue;
+
                     var dto = MapToGameDTO(game, user);
                     result.Add(dto);
                 }

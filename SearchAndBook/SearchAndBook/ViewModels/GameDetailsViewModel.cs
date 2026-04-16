@@ -90,7 +90,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private readonly IBookingService _bookingService;
+        private readonly InterfaceBookingService _bookingService;
 
         public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
 
