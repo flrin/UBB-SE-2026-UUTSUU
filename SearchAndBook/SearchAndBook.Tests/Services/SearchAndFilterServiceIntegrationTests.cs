@@ -308,7 +308,7 @@ public class SearchAndFilterServiceIntegrationTests
         }
 
         [Fact]
-        public void GetDiscoveryFeedPaged_SplitsResultsIntoAvailableTonightAndOthers()
+        public void GetDiscoveryFeedPaged_TotalEqualsSumOfAvailableAndOthers()
         {
             var gamesRepository = new InMemoryGamesRepository(
                 Enumerable.Range(1, 10)

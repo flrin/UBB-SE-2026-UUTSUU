@@ -64,7 +64,7 @@ namespace SearchAndBook.Services
                         Price = game.Price,
                         City = gameowner != null ? gameowner.City : string.Empty,
                         MaximumPlayerNumber = game.MaximumPlayerNumber,
-                        MinimumPlayerNumber = game.MinimumPlayerNumber
+                        MinimumPlayerNumber = game.MinimumPlayerNumber,
                     };
 
                     gameResults.Add(gameDto);
@@ -77,7 +77,6 @@ namespace SearchAndBook.Services
                 //// this is if we decide to only use this methode and remove the ApplyFilters method
                 //// only runs this code if SortOption is set, so never from feed
 
-
                 return ApplyFilters(gameResultsAray, filter);
             }
             catch (Exception ex)
@@ -86,23 +85,6 @@ namespace SearchAndBook.Services
             }
 }
 
-
-        //pentru ca in codul curent avem in functiile GetGamesFeedAvailableTonightByUser si GetOtherGamesFeedByUser cu cod duplicat 
-
-
-        private GameDTO MapToGameDTO(Game game, User? owner)
-        {
-            return new GameDTO
-            {
-                GameId = game.GameId,
-                Name = game.Name,
-                Image = game.Image,
-                Price = game.Price,
-                City = owner?.City ?? string.Empty,
-                MaximumPlayerNumber = game.MaximumPlayerNumber,
-                MinimumPlayerNumber = game.MinimumPlayerNumber
-            };
-        }
         /// <summary>
         /// Retrieves a feed of games available tonight for the specified user.
         /// </summary>
@@ -112,11 +94,19 @@ namespace SearchAndBook.Services
         {
             try
             {
-                var games = gamesRepository.GetGamesForFeedAvailableTonight(userId);
-                //aici am moficat, nu am mai duplicat codul din functia MapToGameDTO
-                return games.Select(game => MapToGameDTO(game, usersRepository.GetGameById(game.OwnerId))).ToArray();
-            }
+                var games = this.gamesRepository.GetGamesForFeedAvailableTonight(userId);
+                var result = new List<GameDTO>();
+                // aici am moficat, nu am mai duplicat codul din functia MapToGameDTO 
 
+                foreach (var game in games)
+                {
+                    var user = this.usersRepository.Get(game.OwnerId);
+                    var dto = MapToGameDTO(game, user);
+                    result.Add(dto);
+                }
+
+                return result.ToArray();
+            }
             catch (Exception ex)
             {
                 throw new InvalidOperationException("Failed to retrieve <<Available tonight>> feed.", ex);
@@ -132,14 +122,37 @@ namespace SearchAndBook.Services
         {
             try
             {
-                var games = gamesRepository.GetGamesForFeedOthers(userId);
-                return games.Select(game => MapToGameDTO(game, usersRepository.GetGameById(game.OwnerId))).ToArray();
+                var games = this.gamesRepository.GetGamesForFeedOthers(userId);
+                var result = new List<GameDTO>();
 
+                foreach (var game in games)
+                {
+                    var user = this.usersRepository.Get(game.OwnerId);
+                    var dto = MapToGameDTO(game, user);
+                    result.Add(dto);
+                }
+
+                return result.ToArray();
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException("Failed to retrieve <<Others>> feed.", ex);
             }
+        }
+
+        // pentru ca in codul curent avem in functiile GetGamesFeedAvailableTonightByUser si GetOtherGamesFeedByUser cu cod duplicat
+        private static GameDTO MapToGameDTO(Game game, User? owner)
+        {
+            return new GameDTO
+            {
+                GameId = game.GameId,
+                Name = game.Name,
+                Image = game.Image,
+                Price = game.Price,
+                City = owner?.City ?? string.Empty,
+                MaximumPlayerNumber = game.MaximumPlayerNumber,
+                MinimumPlayerNumber = game.MinimumPlayerNumber,
+            };
         }
 
         public GameDTO[] ApplyFilters(GameDTO[] sourceGames, FilterCriteria filter)

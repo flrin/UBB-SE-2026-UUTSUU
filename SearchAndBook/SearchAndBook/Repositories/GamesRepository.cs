@@ -28,6 +28,23 @@ public class GamesRepository : InterfaceGamesRepository
 {
     public const int AnonimousUserId = -1;
 
+    // Used to convert game data to Game object
+    private static Game MapGame(SqlDataReader reader)
+    {
+        return new Game
+        {
+            GameId = Convert.ToInt32(reader["game_id"]),
+            Name = Convert.ToString(reader["name"]) ?? string.Empty,
+            Price = Convert.ToDecimal(reader["price"]),
+            MinimumPlayerNumber = Convert.ToInt32(reader["minimum_player_number"]),
+            MaximumPlayerNumber = Convert.ToInt32(reader["maximum_player_number"]),
+            Description = Convert.ToString(reader["description"]) ?? string.Empty,
+            Image = reader["image"] == DBNull.Value ? null : (byte[])reader["image"],
+            IsActive = Convert.ToBoolean(reader["is_active"]),
+            OwnerId = Convert.ToInt32(reader["owner_id"]),
+        };
+    }
+
     /// Gets a single game by its database id.
     /// <param name="id">The unique id of the game.</param>
     /// <remarks>
@@ -123,7 +140,9 @@ public class GamesRepository : InterfaceGamesRepository
         }
     }
 
+    /// <summary>
     /// Gets games that are available starting today and continuing through tomorrow.
+    /// </summary>
     /// <param name="userId">
     /// Current authenticated user id OR -1 for user not logged in. 
     /// Used to exclude the user's own games from the feed.
@@ -162,11 +181,14 @@ public class GamesRepository : InterfaceGamesRepository
         }
     }
 
+    /// <summary>
     /// Gets all remaining active games that are not part of the "Available Tonight" section.
+    /// </summary>
     /// <param name="userId">
     /// Current authenticated user id.
     /// Used to exclude the user's own games from the feed.
     /// </param>
+    /// <returns>A list of games for the "Available Tonight" section.</returns>
     public List<Game> GetGamesForFeedOthers(int userId)
     {
         try
@@ -230,22 +252,5 @@ public class GamesRepository : InterfaceGamesRepository
         {
             throw;
         }
-    }
-
-    // Used to convert game data to Game object
-    private static Game MapGame(SqlDataReader reader)
-    {
-        return new Game
-        {
-            GameId = Convert.ToInt32(reader["game_id"]),
-            Name = Convert.ToString(reader["name"]) ?? string.Empty,
-            Price = Convert.ToDecimal(reader["price"]),
-            MinimumPlayerNumber = Convert.ToInt32(reader["minimum_player_number"]),
-            MaximumPlayerNumber = Convert.ToInt32(reader["maximum_player_number"]),
-            Description = Convert.ToString(reader["description"]) ?? string.Empty,
-            Image = reader["image"] == DBNull.Value ? null : (byte[])reader["image"],
-            IsActive = Convert.ToBoolean(reader["is_active"]),
-            OwnerId = Convert.ToInt32(reader["owner_id"])
-        };
     }
 }
