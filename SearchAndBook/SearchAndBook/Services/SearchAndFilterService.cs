@@ -103,7 +103,21 @@
             try
             {
                 var games = this.gamesRepository.GetGamesForFeedAvailableTonight(userId);
-                return games.Select(game => this.MapToGameDTO(game, this.usersRepository.GetGameById(game.OwnerId))).ToArray();
+                var result = new List<GameDTO>();
+                // aici am moficat, nu am mai duplicat codul din functia MapToGameDTO 
+
+                foreach (var game in games)
+                {
+                    var user = this.usersRepository.GetGameById(game.OwnerId);
+
+                    if (user != null)
+                    {
+                        var dto = MapToGameDTO(game, user);
+                        result.Add(dto);
+                    }
+                }
+
+                return result.ToArray();
             }
             catch (Exception ex)
             {
@@ -121,7 +135,19 @@
             try
             {
                 var games = this.gamesRepository.GetGamesForFeedOthers(userId);
-                return games.Select(game => this.MapToGameDTO(game, this.usersRepository.GetGameById(game.OwnerId))).ToArray();
+                var result = new List<GameDTO>();
+                foreach (var game in games)
+                {
+                    var user = this.usersRepository.GetGameById(game.OwnerId);
+
+                    if (user == null)
+                        continue;
+
+                    var dto = MapToGameDTO(game, user);
+                    result.Add(dto);
+                }
+
+                return result.ToArray();
             }
             catch (Exception ex)
             {

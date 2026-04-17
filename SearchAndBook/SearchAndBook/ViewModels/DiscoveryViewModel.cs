@@ -15,30 +15,25 @@ namespace SearchAndBook.ViewModels
 {
     public class DiscoveryViewModel : INotifyPropertyChanged
     {
-        
-
-        private const int MinimumCitySearchLength = 2;
         private const int ItemsPerPage = 10;
+
+        public event Action? OnPageChanged;
 
         private readonly InterfaceSearchAndFilterService _searchService;
         private readonly InterfaceGeographicalService _geographicalService;
 
-
-        public event Action? OnPageChanged;
-
-
         public List<GameDTO> AvailableTonightGames { get; set; } = new();
+
         public List<GameDTO> OtherAvailableGames { get; set; } = new();
 
 
         public bool IsEndDateEnabled => SelectedStartDate.HasValue;
 
-       
-
         private bool _showOthersHeader;
+
         public bool ShowOthersHeader
         {
-            get => _showOthersHeader;
+            get => this._showOthersHeader;
             set
             {
                 _showOthersHeader = value;
@@ -56,6 +51,7 @@ namespace SearchAndBook.ViewModels
         : DateTimeOffset.Now.Date;
 
         private DateTimeOffset? _selectedStartDate;
+
         public DateTimeOffset? SelectedStartDate
         {
             get => _selectedStartDate;
@@ -85,6 +81,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private DateTimeOffset? _selectedEndDate;
+
         public DateTimeOffset? SelectedEndDate
         {
             get => _selectedEndDate;
@@ -104,6 +101,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private int _currentPage = 1;
+
         public int CurrentPage
         {
             get => _currentPage;
@@ -115,6 +113,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private int _totalAvailableGamesCount;
+
         private int TotalGamesCount => _totalAvailableGamesCount;
 
         public int TotalPages
@@ -166,95 +165,75 @@ namespace SearchAndBook.ViewModels
 
         public string NoResultsMessage => TotalGamesCount == 0 ? "No games available." : "";
 
+        /// <summary>
+        /// Loads paginated discovery feed and updates UI properties.
+        /// </summary>
         public async void LoadPaginatedDiscoveryFeed()
         {
             try
             {
                 int currentUserId = SessionContext.GetInstance().UserId;
 
-                var discoveryFeedResult = _searchService.GetDiscoveryFeedPaged(currentUserId, CurrentPage, ItemsPerPage);
+                var discoveryFeedResult = this._searchService.GetDiscoveryFeedPaged(currentUserId, this.CurrentPage, ItemsPerPage);
 
-                AvailableTonightGames = discoveryFeedResult.availableTonight;
-                OtherAvailableGames = discoveryFeedResult.others;
-                ShowOthersHeader = OtherAvailableGames.Any();
-                _totalAvailableGamesCount = discoveryFeedResult.totalAvailableGamesCount;
+                this.AvailableTonightGames = discoveryFeedResult.availableTonight;
+                this.OtherAvailableGames = discoveryFeedResult.others;
+                this.ShowOthersHeader = this.OtherAvailableGames.Any();
+                this._totalAvailableGamesCount = discoveryFeedResult.totalAvailableGamesCount;
 
-                await LoadImagesForGames(AvailableTonightGames);
-                await LoadImagesForGames(OtherAvailableGames);
+                await this.LoadImagesForGames(AvailableTonightGames);
+                await this.LoadImagesForGames(OtherAvailableGames);
 
-                OnPropertyChanged(nameof(TotalPages));
-                OnPropertyChanged(nameof(AvailableTonightGames));
-                OnPropertyChanged(nameof(OtherAvailableGames));
-                OnPropertyChanged(nameof(NoResultsMessage));
-
-               
+                this.OnPropertyChanged(nameof(TotalPages));
+                this.OnPropertyChanged(nameof(AvailableTonightGames));
+                this.OnPropertyChanged(nameof(OtherAvailableGames));
+                this.OnPropertyChanged(nameof(NoResultsMessage)); 
             }
             catch (Exception exception)
             {
-                OnErrorOccurred?.Invoke($"Could not load discovery feed. {exception.Message}");
+                this.OnErrorOccurred?.Invoke($"Could not load discovery feed. {exception.Message}");
             }
         }
 
-        private async Task LoadImagesForGames(IEnumerable<GameDTO> gamesToLoadImagesFor)
-        {
-            try
-            {
-                foreach (var game in gamesToLoadImagesFor)
-                {
-                    if (game.Image != null && game.GameImage == null)
-                    {
-                        try
-                        {
-                            game.GameImage = await GameImage.ToBitmapImage(game.Image);
-                        }
-                        catch (Exception ex)
-                        {
-                            OnErrorOccurred?.Invoke($"Could not load an image for a game. {ex.Message}");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                OnErrorOccurred?.Invoke($"Could not load game images. {ex.Message}");
-            }
-        }
-
+        /// <summary>
+        /// Navigates to the next page in the discovery feed.
+        /// </summary>
         public void GoToNextPage()
         {
             try
             {
-                if (CurrentPage * ItemsPerPage < TotalGamesCount)
+                if (this.CurrentPage * ItemsPerPage < this.TotalGamesCount)
                 {
-                    CurrentPage++;
-                    LoadPaginatedDiscoveryFeed();
-                    OnPageChanged?.Invoke();
+                    this.CurrentPage++;
+                    this.LoadPaginatedDiscoveryFeed();
+                    this.OnPageChanged?.Invoke();
                 }
             }
             catch (Exception ex)
             {
-                OnErrorOccurred?.Invoke($"Could not go to next page. {ex.Message}");
+               this.OnErrorOccurred?.Invoke($"Could not go to next page. {ex.Message}");
             }
         }
 
+        /// <summary>
+        /// Navigates to the previous page in the discovery feed.
+        /// </summary>
         public void GoToPreviousPage()
         {
             try
             {
-                if (CurrentPage > 1)
+                if (this.CurrentPage > 1)
                 {
-                    CurrentPage--;
-                    LoadPaginatedDiscoveryFeed();
-                    OnPageChanged?.Invoke();
+                    this.CurrentPage--;
+                    this.LoadPaginatedDiscoveryFeed();
+                    this.OnPageChanged?.Invoke();
                 }
             }
             catch (Exception ex)
             {
-                OnErrorOccurred?.Invoke($"Could not go to previous page. {ex.Message}");
+                this.OnErrorOccurred?.Invoke($"Could not go to previous page. {ex.Message}");
             }
         }
-
-        
 
         public void SearchGamesByFilter(FilterCriteria criteria)
         {
@@ -285,8 +264,33 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        
+        private async Task LoadImagesForGames(IEnumerable<GameDTO> gamesToLoadImagesFor)
+        {
+            try
+            {
+                foreach (var game in gamesToLoadImagesFor)
+                {
+                    if (game.Image != null && game.GameImage == null)
+                    {
+                        try
+                        {
+                            game.GameImage = await GameImage.ToBitmapImage(game.Image);
+                        }
+                        catch (Exception ex)
+                        {
+                            OnErrorOccurred?.Invoke($"Could not load an image for a game. {ex.Message}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred?.Invoke($"Could not load game images. {ex.Message}");
+            }
+        }
+
         private string _citySearchText = string.Empty;
+
         public string CitySearchText
         {
             get => _citySearchText;
@@ -301,8 +305,11 @@ namespace SearchAndBook.ViewModels
                 }
             }
         }
-        
+
+        private const int MinimumCitySearchLength = 2;
+
         public ObservableCollection<string> CitySuggestions { get; } = new();
+
         private void UpdateCitySuggestions(string input)
         {
             try
@@ -349,7 +356,5 @@ namespace SearchAndBook.ViewModels
                 OnErrorOccurred?.Invoke($"Could not update availability range. {ex.Message}");
             }
         }
-
-       
     }
 }

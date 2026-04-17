@@ -3,7 +3,6 @@ using SearchAndBook.Domain;
 using SearchAndBook.Repositories;
 using SearchAndBook.Services;
 using SearchAndBook.Shared;
-using SearchAndBook.Shared;
 
 namespace SearchAndBook.Tests.Services;
 

@@ -18,8 +18,11 @@ namespace SearchAndBook.ViewModels
         private const long START_OF_STREAM_POSTION = 0;
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
         public event Action? OnGoBackRequested;
+
         public event Action<BookingDTO, TimeRange>? OnStartBookingRequested;
+
         public event Action<string>? OnMessageRequested;
 
         public DateTimeOffset Today => DateTimeOffset.Now.Date;
@@ -28,6 +31,7 @@ namespace SearchAndBook.ViewModels
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
         private BookingDTO _gameAndUserDetails;
+
         public BookingDTO GameAndUserDetails
         {
             get => _gameAndUserDetails;
@@ -39,6 +43,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private bool _hasError;
+
         public bool HasError
         {
             get => _hasError;
@@ -50,6 +55,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private decimal _totalPrice;
+
         public decimal TotalPrice
         {
             get => _totalPrice;
@@ -61,6 +67,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private BitmapImage? _gameImage;
+
         public BitmapImage? GameImage
         {
             get => _gameImage;
@@ -72,6 +79,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private string? _ownerImageUrl;
+
         public string? OwnerImageUrl
         {
             get => _ownerImageUrl;
@@ -83,6 +91,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private readonly InterfaceBookingService _bookingService;
+
         public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
 
         public ICommand GoBackCommand => new RelayCommand(_ => GoBack());
@@ -152,7 +161,6 @@ namespace SearchAndBook.ViewModels
                     throw new ArgumentNullException(nameof(timeRange));
 
                 TotalPrice = _bookingService.CalculateTotalPrice(GameAndUserDetails.Price, timeRange);
-                
                 return TotalPrice;
             }
             catch (Exception exception)
