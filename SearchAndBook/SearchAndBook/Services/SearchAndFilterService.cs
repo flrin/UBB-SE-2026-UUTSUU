@@ -1,13 +1,13 @@
-﻿using SearchAndBook.Domain;
-using SearchAndBook.Repositories;
-using SearchAndBook.Shared;
-using SearchAndBook.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace SearchAndBook.Services
+﻿namespace SearchAndBook.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using SearchAndBook.Domain;
+    using SearchAndBook.Repositories;
+    using SearchAndBook.Shared;
+    using SearchAndBook.Utils;
+
     /// <summary>
     /// Service responsible for searching, filtering, and retrieving game feeds.
     /// </summary>
@@ -16,14 +16,22 @@ namespace SearchAndBook.Services
         private readonly InterfaceGamesRepository gamesRepository;
         private readonly InterfaceUsersRepository usersRepository;
         private readonly InterfaceRentalsRepository rentalsRepository;
-        private readonly InterfaceGeographicalService _geographicalService;
+        private readonly InterfaceGeographicalService geographicalService;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SearchAndFilterService"/> class.
+        /// Initializes a new instance.
+        /// </summary>
+        /// <param name="gamesRepository">The repository for game data operations.</param>
+        /// <param name="usersRepository">The repository for user data operations.</param>
+        /// <param name="rentalsRepository">The repository for rental data operations.</param>
+        /// <param name="geographicalService">The service for geographical and location-based calculations.</param>
         public SearchAndFilterService(InterfaceGamesRepository gamesRepository, InterfaceUsersRepository usersRepository, InterfaceRentalsRepository rentalsRepository, InterfaceGeographicalService geographicalService)
         {
             this.gamesRepository = gamesRepository;
             this.usersRepository = usersRepository;
             this.rentalsRepository = rentalsRepository;
-            this._geographicalService = geographicalService;
+            this.geographicalService = geographicalService;
         }
 
         /// <summary>
@@ -41,7 +49,7 @@ namespace SearchAndBook.Services
                     filter.City = null;
                 }
 
-                var games = gamesRepository.GetGamesByFilter(filter);
+                var games = this.gamesRepository.GetGamesByFilter(filter);
                 filter.City = originalCity;
 
                 var gameResults = new List<GameDTO>();
@@ -51,7 +59,7 @@ namespace SearchAndBook.Services
                 {
                     if (!ownerCacheById.ContainsKey(game.OwnerId))
                     {
-                        ownerCacheById[game.OwnerId] = usersRepository.GetGameById(game.OwnerId);
+                        ownerCacheById[game.OwnerId] = this.usersRepository.GetGameById(game.OwnerId);
                     }
 
                     var gameowner = ownerCacheById[game.OwnerId];
@@ -64,7 +72,7 @@ namespace SearchAndBook.Services
                         Price = game.Price,
                         City = gameowner != null ? gameowner.City : string.Empty,
                         MaximumPlayerNumber = game.MaximumPlayerNumber,
-                        MinimumPlayerNumber = game.MinimumPlayerNumber
+                        MinimumPlayerNumber = game.MinimumPlayerNumber,
                     };
 
                     gameResults.Add(gameDto);
@@ -77,14 +85,13 @@ namespace SearchAndBook.Services
                 //// this is if we decide to only use this methode and remove the ApplyFilters method
                 //// only runs this code if SortOption is set, so never from feed
 
-
-                return ApplyFilters(gameResultsAray, filter);
+                return this.ApplyFilters(gameResultsAray, filter);
             }
             catch (Exception ex)
             {
-                 throw new InvalidOperationException("Failed to search for games.", ex);
+                throw new InvalidOperationException("Failed to search for games.", ex);
             }
-}
+        }
 
         /// <summary>
         /// Retrieves a feed of games available tonight for the specified user.
@@ -148,21 +155,13 @@ namespace SearchAndBook.Services
             }
         }
 
-        // pentru ca in codul curent avem in functiile GetGamesFeedAvailableTonightByUser si GetOtherGamesFeedByUser cu cod duplicat
-        private static GameDTO MapToGameDTO(Game game, User? owner)
-        {
-            return new GameDTO
-            {
-                GameId = game.GameId,
-                Name = game.Name,
-                Image = game.Image,
-                Price = game.Price,
-                City = owner?.City ?? string.Empty,
-                MaximumPlayerNumber = game.MaximumPlayerNumber,
-                MinimumPlayerNumber = game.MinimumPlayerNumber,
-            };
-        }
-
+        /// <summary>
+        /// Filters and sorts an array of games based on the provided criteria, including name, price, player count, and location.
+        /// </summary>
+        /// <param name="sourceGames">The initial collection of games to be filtered.</param>
+        /// <param name="filter">The criteria used for filtering and sorting the games.</param>
+        /// <returns>An array of <see cref="GameDTO""")/>> objects that match the filter criteria.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when an error occurs during the filtering process.</exception>
         public GameDTO[] ApplyFilters(GameDTO[] sourceGames, FilterCriteria filter)
         {
             try
@@ -191,7 +190,6 @@ namespace SearchAndBook.Services
                         game.City.Contains(filter.City, StringComparison.OrdinalIgnoreCase));
                 }
 
-
                 switch (filter.SortOption)
                 {
                     case SortOption.PriceAscending:
@@ -205,18 +203,21 @@ namespace SearchAndBook.Services
                     case SortOption.Location:
                         if (!string.IsNullOrWhiteSpace(filter.City))
                         {
-                            var userCity = _geographicalService.GetCityDetails(filter.City);
+                            var userCity = this.geographicalService.GetCityDetails(filter.City);
                             if (userCity.found)
                             {
                                 var distanceCache = new Dictionary<string, double?>();
 
                                 filteredGames = filteredGames.OrderBy(g =>
                                 {
-                                    if (string.IsNullOrWhiteSpace(g.City)) return double.MaxValue;
+                                    if (string.IsNullOrWhiteSpace(g.City))
+                                    {
+                                        return double.MaxValue;
+                                    }
 
                                     if (!distanceCache.TryGetValue(g.City, out double? distance))
                                     {
-                                        var gameCity = _geographicalService.GetCityDetails(g.City);
+                                        var gameCity = this.geographicalService.GetCityDetails(g.City);
                                         distance = gameCity.found
                                             ? GeographicDistance.CalculateDistance(userCity.lat, userCity.lon, gameCity.lat, gameCity.lon)
                                             : null;
@@ -228,6 +229,7 @@ namespace SearchAndBook.Services
                                 });
                             }
                         }
+
                         break;
 
                     case SortOption.None:
@@ -238,8 +240,9 @@ namespace SearchAndBook.Services
                 if (filter.AvailabilityRange != null)
                 {
                     filteredGames = filteredGames.Where(game =>
-                        rentalsRepository.CheckAvailability(filter.AvailabilityRange, game.GameId));
+                        this.rentalsRepository.CheckAvailability(filter.AvailabilityRange, game.GameId));
                 }
+
                 return filteredGames.ToArray();
             }
             catch (Exception ex)
@@ -248,12 +251,18 @@ namespace SearchAndBook.Services
             }
         }
 
-
+        /// <summary>
+        /// Retrieves a paginated discovery feed, splitting games into those available tonight and others.
+        /// </summary>
+        /// <param name="userId">The ID of the user for whom the feed is generated.</param>
+        /// <param name="page">The current page number (1-based).</param>
+        /// <param name="pageSize">The number of items to include per page.</param>
+        /// <returns>A tuple containing available games for tonight, other available games, and the total count of games.</returns>
         public (List<GameDTO> availableTonight, List<GameDTO> others, int totalAvailableGamesCount)
-         GetDiscoveryFeedPaged(int userId, int page, int pageSize)
+            GetDiscoveryFeedPaged(int userId, int page, int pageSize)
          {
-                var availableTonightGames = GetGamesFeedAvailableTonightByUser(userId).ToList();
-                var otherAvailableGames = GetOtherGamesFeedByUser(userId).ToList();
+                var availableTonightGames = this.GetGamesFeedAvailableTonightByUser(userId).ToList();
+                var otherAvailableGames = this.GetOtherGamesFeedByUser(userId).ToList();
 
                 var allDescoveryFeedGames = availableTonightGames.Concat(otherAvailableGames).ToList();
                 var totalAvailableGamesCount = allDescoveryFeedGames.Count;
@@ -274,28 +283,51 @@ namespace SearchAndBook.Services
                 return (pagedAvailableTonightGames, pagedOtherGames, totalAvailableGamesCount);
          }
 
-
+        /// <summary>
+        /// Validates if a given date range is logical (start date is before or equal to end date).
+        /// </summary>
+        /// <param name="start">The start date of the range.</param>
+        /// <param name="end">The end date of the range.</param>
+        /// <returns>True if the range is valid or both dates are null; false if only one date is provided or start is after end.</returns>
         public bool IsValidDateRange(DateTime? start, DateTime? end)
         {
             if (!start.HasValue && !end.HasValue)
+            {
                 return true;
+            }
 
             if (!start.HasValue || !end.HasValue)
+            {
                 return false;
+            }
 
             return start.Value <= end.Value;
         }
 
+        /// <summary>
+        /// checks if the number of players if valid.
+        /// </summary>
+        /// <param name="players">number of players.</param>
+        /// <returns>true if the value is valid, false otherwise.</returns>
         public bool IsValidPlayersCount(int? players)
         {
             if (!players.HasValue)
+            {
                 return true;
+            }
 
             return players.Value >= 0;
         }
 
-
-        public void UpdateFilterFromUI(FilterCriteria filter,double selectedMaxPrice,double selectedMinPlayers,DateTime? startDate,DateTime? endDate)
+        /// <summary>
+        /// Updates the filter criteria object with values provided from the user interface.
+        /// </summary>
+        /// <param name="filter">The filter object to be updated.</param>
+        /// <param name="selectedMaxPrice">The maximum price selected by the user.</param>
+        /// <param name="selectedMinPlayers">The minimum number of players selected by the user.</param>
+        /// <param name="startDate">The start date for availability.</param>
+        /// <param name="endDate">The end date for availability.</param>
+        public void UpdateFilterFromUI(FilterCriteria filter, double selectedMaxPrice, double selectedMinPlayers, DateTime? startDate, DateTime? endDate)
         {
             // price
             filter.MaximumPrice = selectedMaxPrice > 0
@@ -308,7 +340,7 @@ namespace SearchAndBook.Services
                 : null;
 
             // date
-            if (IsValidDateRange(startDate, endDate))
+            if (this.IsValidDateRange(startDate, endDate))
             {
                 if (startDate.HasValue && endDate.HasValue)
                 {
@@ -325,6 +357,26 @@ namespace SearchAndBook.Services
             {
                 filter.AvailabilityRange = null;
             }
+        }
+
+        /// <summary>
+        /// Maps a <see cref="Game""")/>> entity and its owner's information to a <see cref="GameDTO""")/>>.
+        /// </summary>
+        /// <param name="game">The game entity to map.</param>
+        /// <param name="owner">The user who owns the game.</param>
+        /// <returns>A data transfer object representing the game.</returns>
+        private GameDTO MapToGameDTO(Game game, User? owner)
+        {
+            return new GameDTO
+            {
+                GameId = game.GameId,
+                Name = game.Name,
+                Image = game.Image,
+                Price = game.Price,
+                City = owner?.City ?? string.Empty,
+                MaximumPlayerNumber = game.MaximumPlayerNumber,
+                MinimumPlayerNumber = game.MinimumPlayerNumber,
+            };
         }
     }
 }
