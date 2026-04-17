@@ -1,171 +1,158 @@
-﻿namespace SearchAndBook.ViewModels
-{
-    using System;
-    using System.ComponentModel;
-    using System.Runtime.CompilerServices;
-    using System.Runtime.InteropServices.WindowsRuntime;
-    using Microsoft.UI.Xaml.Media.Imaging;
-    using SearchAndBook.Domain;
-    using SearchAndBook.Services;
-    using SearchAndBook.Shared;
-    using Windows.Storage.Streams;
+﻿using Microsoft.UI.Xaml.Media.Imaging;
+using SearchAndBook.Domain;
+using SearchAndBook.Services;
+using SearchAndBook.Shared;
+using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Storage.Streams;
 
-    /// <summary>
-    /// View model used for confirming a booking.
-    /// </summary>
+namespace SearchAndBook.ViewModels
+{
     internal class ConfirmBookingViewModel : INotifyPropertyChanged
     {
-        private const long StartOfStreamPosition = 0;
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action<string>? OnErrorOccurred;
 
-        private readonly InterfaceBookingService bookingService;
-        private BookingDTO gameAndUserDetails;
-        private TimeRange selectedTimeRange;
-        private decimal totalPrice;
-        private BitmapImage? ownerImage;
-        private BitmapImage? gameImage;
+        private const long START_OF_STREAM_POSTION = 0;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ConfirmBookingViewModel"/> class.
-        /// </summary>
-        /// <param name="bookingService">The booking service.</param>
-        /// <param name="gameAndUserDetails">The selected game and owner details.</param>
-        /// <param name="selectedTimeRange">The selected booking interval.</param>
-        public ConfirmBookingViewModel(
-            InterfaceBookingService bookingService,
-            BookingDTO gameAndUserDetails,
-            TimeRange selectedTimeRange)
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        private readonly InterfaceBookingService BookingService;
+
+        private BookingDTO _gameAndUserDetails;
+        public BookingDTO GameAndUserDetails
+        {
+            get => _gameAndUserDetails;
+            private set
+            {
+                _gameAndUserDetails = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
+
+        private TimeRange _selectedTimeRange;
+        public TimeRange SelectedTimeRange
+        {
+            get => _selectedTimeRange;
+            private set
+            {
+                _selectedTimeRange = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(NumberOfDays));
+                OnPropertyChanged(nameof(StartDate));
+                OnPropertyChanged(nameof(EndDate));
+            }
+        }
+
+        private decimal _totalPrice;
+        public decimal TotalPrice
+        {
+            get => _totalPrice;
+            private set
+            {
+                _totalPrice = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string StartDate => SelectedTimeRange?.StartTime.ToString("dd MMM yyyy") ?? "-";
+        public string EndDate => SelectedTimeRange?.EndTime.ToString("dd MMM yyyy") ?? "-";
+
+        private BitmapImage? _ownerImage;
+        public BitmapImage? OwnerImage
+        {
+            get => _ownerImage;
+            private set
+            {
+                _ownerImage = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private BitmapImage? _gameImage;
+        public BitmapImage? GameImage
+        {
+            get => _gameImage;
+            private set
+            {
+                _gameImage = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public event Action? OnGoBackRequested;
+        public event Action? OnConfirmBookingRequested;
+
+        public ConfirmBookingViewModel(InterfaceBookingService bookingService, BookingDTO gameAndUserDetails, TimeRange selectedTimeRange)
         {
             try
             {
-                this.bookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
-                this.gameAndUserDetails = gameAndUserDetails ?? throw new ArgumentNullException(nameof(gameAndUserDetails));
-                this.selectedTimeRange = selectedTimeRange ?? throw new ArgumentNullException(nameof(selectedTimeRange));
+                BookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
+                GameAndUserDetails = gameAndUserDetails ?? throw new ArgumentNullException(nameof(gameAndUserDetails));
+                SelectedTimeRange = selectedTimeRange ?? throw new ArgumentNullException(nameof(selectedTimeRange));
 
-                this.UnavailableTimeRanges = this.bookingService.GetUnavailableRanges(this.GameAndUserDetails.GameId) ?? Array.Empty<TimeRange>();
-                this.TotalPrice = this.CalculatePrice();
-                this.LoadImages();
+                UnavailableTimeRanges = BookingService.GetUnavailableRanges(GameAndUserDetails.GameId) ?? Array.Empty<TimeRange>();
+                TotalPrice = CalculatePrice();
+                LoadImages();
             }
             catch (Exception exception)
             {
-                this.RaiseError($"Could not initialize booking confirmation. {exception.Message}");
-                this.UnavailableTimeRanges = Array.Empty<TimeRange>();
-                this.TotalPrice = 0;
+                RaiseError($"Could not initialize booking confirmation. {exception.Message}");
+                UnavailableTimeRanges = Array.Empty<TimeRange>();
+                TotalPrice = 0;
             }
         }
 
-        /// <summary>
-        /// Raised when a property value changes.
-        /// </summary>
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        /// <summary>
-        /// Raised when an error occurs.
-        /// </summary>
-        public event Action<string>? OnErrorOccurred;
-
-        /// <summary>
-        /// Raised when the user wants to go back.
-        /// </summary>
-        public event Action? OnGoBackRequested;
-
-        /// <summary>
-        /// Raised when the user confirms the booking.
-        /// </summary>
-        public event Action? OnConfirmBookingRequested;
-
-        /// <summary>
-        /// Gets the selected game and owner details.
-        /// </summary>
-        public BookingDTO GameAndUserDetails
+        private async void LoadImages()
         {
-            get => this.gameAndUserDetails;
-            private set
+            try
             {
-                this.gameAndUserDetails = value;
-                this.OnPropertyChanged();
+                if (GameAndUserDetails.Image != null && GameAndUserDetails.Image.Length > 0)
+                {
+                    using var stream = new InMemoryRandomAccessStream();
+                    await stream.WriteAsync(GameAndUserDetails.Image.AsBuffer());
+                    stream.Seek(START_OF_STREAM_POSTION);
+                    var bitmap = new BitmapImage();
+                    await bitmap.SetSourceAsync(stream);
+                    GameImage = bitmap;
+                }
+                else
+                {
+                    GameImage = null;
+                }
+
+                if (!string.IsNullOrEmpty(GameAndUserDetails.AvatarUrl))
+                {
+                    OwnerImage = new BitmapImage(new Uri(GameAndUserDetails.AvatarUrl));
+                }
+                else
+                {
+                    OwnerImage = null;
+                }
+            }
+            catch (Exception exception)
+            {
+                GameImage = null;
+                OwnerImage = null;
+                RaiseError($"Could not load images. {exception.Message}");
             }
         }
 
-        /// <summary>
-        /// Gets the unavailable time ranges for the current game.
-        /// </summary>
-        public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
-
-        /// <summary>
-        /// Gets the currently selected time range.
-        /// </summary>
-        public TimeRange SelectedTimeRange
-        {
-            get => this.selectedTimeRange;
-            private set
-            {
-                this.selectedTimeRange = value;
-                this.OnPropertyChanged();
-                this.OnPropertyChanged(nameof(this.NumberOfDays));
-                this.OnPropertyChanged(nameof(this.StartDate));
-                this.OnPropertyChanged(nameof(this.EndDate));
-            }
-        }
-
-        /// <summary>
-        /// Gets the total booking price.
-        /// </summary>
-        public decimal TotalPrice
-        {
-            get => this.totalPrice;
-            private set
-            {
-                this.totalPrice = value;
-                this.OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets the formatted start date.
-        /// </summary>
-        public string StartDate => this.SelectedTimeRange.StartTime.ToString("dd MMM yyyy");
-
-        /// <summary>
-        /// Gets the formatted end date.
-        /// </summary>
-        public string EndDate => this.SelectedTimeRange.EndTime.ToString("dd MMM yyyy");
-
-        /// <summary>
-        /// Gets the owner image.
-        /// </summary>
-        public BitmapImage? OwnerImage
-        {
-            get => this.ownerImage;
-            private set
-            {
-                this.ownerImage = value;
-                this.OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets the game image.
-        /// </summary>
-        public BitmapImage? GameImage
-        {
-            get => this.gameImage;
-            private set
-            {
-                this.gameImage = value;
-                this.OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets the number of selected booking days.
-        /// </summary>
         public int NumberOfDays
         {
             get
             {
                 try
                 {
-                    return this.bookingService.CalculateNumberOfDays(this.SelectedTimeRange);
+                    if (SelectedTimeRange == null)
+                        return 1;
+
+                    return BookingService.CalculateNumberOfDays(SelectedTimeRange);
                 }
                 catch
                 {
@@ -174,179 +161,100 @@
             }
         }
 
-        /// <summary>
-        /// Checks if a time range is available.
-        /// </summary>
-        /// <param name="timeRange">The interval to check.</param>
-        /// <returns><c>true</c> if available; otherwise, <c>false</c>.</returns>
         public bool CheckAvailability(TimeRange timeRange)
         {
             try
             {
                 if (timeRange == null)
-                {
                     return false;
-                }
 
-                return this.bookingService.CheckAvailability(this.GameAndUserDetails.GameId, timeRange);
+                return BookingService.CheckAvailability(GameAndUserDetails.GameId, timeRange);
             }
             catch (Exception exception)
             {
-                this.RaiseError($"Could not check availability. {exception.Message}");
+                RaiseError($"Could not check availability. {exception.Message}");
                 return false;
             }
         }
 
-        /// <summary>
-        /// Confirms the booking.
-        /// </summary>
         public void ConfirmBooking()
         {
             try
             {
-                this.OnConfirmBookingRequested?.Invoke();
+                OnConfirmBookingRequested?.Invoke();
             }
             catch (Exception exception)
             {
-                this.RaiseError($"Could not confirm booking. {exception.Message}");
+                RaiseError($"Could not confirm booking. {exception.Message}");
             }
         }
 
-        /// <summary>
-        /// Requests navigation back.
-        /// </summary>
         public void GoBack()
         {
             try
             {
-                this.OnGoBackRequested?.Invoke();
+                OnGoBackRequested?.Invoke();
             }
             catch (Exception exception)
             {
-                this.RaiseError($"Could not go back. {exception.Message}");
+                RaiseError($"Could not go back. {exception.Message}");
             }
         }
 
-        /// <summary>
-        /// Calculates the total booking price.
-        /// </summary>
-        /// <returns>The total price.</returns>
         public decimal CalculatePrice()
         {
             try
             {
-                return this.bookingService.CalculateTotalPrice(this.GameAndUserDetails.Price, this.SelectedTimeRange);
+                return BookingService.CalculateTotalPrice(GameAndUserDetails.Price, SelectedTimeRange);
             }
             catch (Exception exception)
             {
-                this.RaiseError($"Could not calculate price. {exception.Message}");
-                this.TotalPrice = 0;
+                RaiseError($"Could not calculate price. {exception.Message}");
+                TotalPrice = 0;
                 return 0;
             }
         }
 
-        /// <summary>
-        /// Updates the selected booking interval.
-        /// </summary>
-        /// <param name="newTimeRange">The new time range.</param>
         public void UpdateSelectedRange(TimeRange newTimeRange)
         {
             try
             {
                 if (newTimeRange == null)
-                {
                     throw new ArgumentNullException(nameof(newTimeRange));
-                }
 
-                this.SelectedTimeRange = newTimeRange;
-                this.TotalPrice = this.CalculatePrice();
-                this.OnPropertyChanged(nameof(this.NumberOfDays));
-                this.OnPropertyChanged(nameof(this.StartDate));
-                this.OnPropertyChanged(nameof(this.EndDate));
-                this.OnPropertyChanged(nameof(this.TotalPrice));
+                SelectedTimeRange = newTimeRange;
+                TotalPrice = CalculatePrice();
+                OnPropertyChanged(nameof(NumberOfDays));
+                OnPropertyChanged(nameof(StartDate));
+                OnPropertyChanged(nameof(EndDate));
+                OnPropertyChanged(nameof(TotalPrice));
             }
             catch (Exception exception)
             {
-                this.RaiseError($"Could not update selected time range. {exception.Message}");
+                RaiseError($"Could not update selected timeRange. {exception.Message}");
             }
         }
 
-        /// <summary>
-        /// Checks whether a date is inside an unavailable time range.
-        /// </summary>
-        /// <param name="date">The date to check.</param>
-        /// <returns><c>true</c> if the date is unavailable; otherwise, <c>false</c>.</returns>
+        private void RaiseError(string message)
+        {
+            OnErrorOccurred?.Invoke(message);
+        }
+
         internal bool IsTimeRangeUnavailable(DateTime date)
         {
-            if (this.UnavailableTimeRanges != null)
+            bool isUnavailable = false;
+            if (UnavailableTimeRanges != null)
             {
-                foreach (var timeRange in this.UnavailableTimeRanges)
+                foreach (var timeRange in UnavailableTimeRanges)
                 {
                     if (date >= timeRange.StartTime.Date && date <= timeRange.EndTime.Date)
                     {
-                        return true;
+                        isUnavailable = true;
+                        break;
                     }
                 }
             }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Raises the property changed event.
-        /// </summary>
-        /// <param name="name">The property name.</param>
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
-        {
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-
-        /// <summary>
-        /// Loads the game and owner images.
-        /// </summary>
-        private async void LoadImages()
-        {
-            try
-            {
-                if (this.GameAndUserDetails.Image != null && this.GameAndUserDetails.Image.Length > 0)
-                {
-                    using var stream = new InMemoryRandomAccessStream();
-                    await stream.WriteAsync(this.GameAndUserDetails.Image.AsBuffer());
-                    stream.Seek(StartOfStreamPosition);
-
-                    var bitmap = new BitmapImage();
-                    await bitmap.SetSourceAsync(stream);
-                    this.GameImage = bitmap;
-                }
-                else
-                {
-                    this.GameImage = null;
-                }
-
-                if (!string.IsNullOrEmpty(this.GameAndUserDetails.AvatarUrl))
-                {
-                    this.OwnerImage = new BitmapImage(new Uri(this.GameAndUserDetails.AvatarUrl));
-                }
-                else
-                {
-                    this.OwnerImage = null;
-                }
-            }
-            catch (Exception exception)
-            {
-                this.GameImage = null;
-                this.OwnerImage = null;
-                this.RaiseError($"Could not load images. {exception.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Raises an error event.
-        /// </summary>
-        /// <param name="message">The error message.</param>
-        private void RaiseError(string message)
-        {
-            this.OnErrorOccurred?.Invoke(message);
+            return isUnavailable;
         }
     }
 }

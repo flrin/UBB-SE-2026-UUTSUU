@@ -1,9 +1,9 @@
-﻿namespace SearchAndBook.Repositories
-{
-    using System.Collections.Generic;
-    using SearchAndBook.Domain;
-    using SearchAndBook.Shared;
+﻿using System.Collections.Generic;
+using SearchAndBook.Domain;
+using SearchAndBook.Shared;
 
+namespace SearchAndBook.Repositories
+{
     /// <summary>
     /// Defines the repository operations for managing Game entities.
     /// </summary>

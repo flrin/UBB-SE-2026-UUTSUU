@@ -1,32 +1,13 @@
-﻿namespace SearchAndBook.Domain
-{
-    using System;
-    using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-    /// <summary>
-    /// Represents a city with a primary name, alternative names and geographic coordinates.
-    /// </summary>
+namespace SearchAndBook.Domain
+{
     public class City
     {
-        /// <summary>
-        /// Gets or sets the primary name of the city.
-        /// </summary>
-        required public string MainName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the latitude of the city in decimal degrees.
-        /// </summary>
+        public required string MainName { get; set; }
         public double Latitude { get; set; }
-
-        /// <summary>
-        /// Gets or sets the longitude of the city in decimal degrees.
-        /// </summary>
         public double Longitude { get; set; }
-
-        /// <summary>
-        /// Gets or sets the list of alternative names for the city.
-        /// </summary>
-        required public List<string> Names { get; set; }
-
+        public required List<string> Names { get; set; }
     }
 }

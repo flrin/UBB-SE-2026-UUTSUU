@@ -1,15 +1,13 @@
-﻿namespace SearchAndBook.Shared
-{
-    using SearchAndBook.Domain;
+﻿using SearchAndBook.Domain;
 
+namespace SearchAndBook.Shared
+{
     public class SessionContext
     {
         private const int UNREGISTERED_USER_ID = -1;
-
         private static SessionContext? _instance;
 
         public int UserId { get; set; }
-
         public bool IsLoggedIn { get; set; }
 
         private SessionContext()

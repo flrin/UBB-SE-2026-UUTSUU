@@ -1,13 +1,13 @@
-﻿namespace SearchAndBook.Services
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using SearchAndBook.Domain;
-    using SearchAndBook.Repositories;
-    using SearchAndBook.Shared;
-    using SearchAndBook.Utils;
+﻿using SearchAndBook.Domain;
+using SearchAndBook.Repositories;
+using SearchAndBook.Shared;
+using SearchAndBook.Utils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
+namespace SearchAndBook.Services
+{
     /// <summary>
     /// Service responsible for searching, filtering, and retrieving game feeds.
     /// </summary>
@@ -97,7 +97,7 @@
             {
                 var games = this.gamesRepository.GetGamesForFeedAvailableTonight(userId);
                 var result = new List<GameDTO>();
-                // aici am moficat, nu am mai duplicat codul din functia MapToGameDTO
+                // aici am moficat, nu am mai duplicat codul din functia MapToGameDTO 
 
                 foreach (var game in games)
                 {
@@ -190,6 +190,7 @@
                         !string.IsNullOrWhiteSpace(game.City) &&
                         game.City.Contains(filter.City, StringComparison.OrdinalIgnoreCase));
                 }
+
 
                 switch (filter.SortOption)
                 {
@@ -293,7 +294,8 @@
             return players.Value >= 0;
         }
 
-        public void UpdateFilterFromUI(FilterCriteria filter, double selectedMaxPrice, double selectedMinPlayers, DateTime? startDate, DateTime? endDate)
+
+        public void UpdateFilterFromUI(FilterCriteria filter,double selectedMaxPrice,double selectedMinPlayers,DateTime? startDate,DateTime? endDate)
         {
             // price
             filter.MaximumPrice = selectedMaxPrice > 0
