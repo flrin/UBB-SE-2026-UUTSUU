@@ -44,16 +44,16 @@
 
         public int MinimumPlayerNumber { get; set; }
 
-        private BitmapImage? _gameImage;
+        private BitmapImage? gameImage;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public BitmapImage? GameImage
         {
-            get => this._gameImage;
+            get => this.gameImage;
             set
             {
-                this._gameImage = value;
+                this.gameImage = value;
                 this.OnPropertyChanged(nameof(this.GameImage));
             }
         }
