@@ -129,7 +129,6 @@
                         }
                         finally
                         {
-                            // Always reset so the same game can be re-selected later.
                             this.selectedGame = null;
                             this.OnPropertyChanged(nameof(this.SelectedGame));
                         }
@@ -322,7 +321,6 @@
                 {
                     if (obj is GameDTO game)
                     {
-                        // Pre-load the image into SelectedGameImage before navigating.
                         if (this.GameImages.TryGetValue(game.GameId, out var image))
                         {
                             this.SelectedGameImage = image;
@@ -785,7 +783,6 @@
                     this.GamesShown.Add(game);
                 }
 
-                // Load images that haven't been fetched yet.
                 foreach (var game in pageListings)
                 {
                     if (game.Image != null && game.GameImage == null)
