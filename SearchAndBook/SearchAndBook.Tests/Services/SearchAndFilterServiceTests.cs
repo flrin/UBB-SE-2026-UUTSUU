@@ -502,8 +502,8 @@ public class SearchAndFilterServiceTests
 
         var game = result.First();
 
-        Assert.NotNull(game.Name);
-        Assert.True(game.Price > 0);
+        Assert.NotNull(game.NameOfTheGame);
+        Assert.True(game.PriceOfTheGame > 0);
         Assert.NotNull(game.City);
         Assert.True(game.MaximumPlayerNumber > 0);
     }

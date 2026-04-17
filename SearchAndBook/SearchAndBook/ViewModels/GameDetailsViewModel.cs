@@ -123,8 +123,8 @@ namespace SearchAndBook.ViewModels
 
             try
             {
-                GameAndUserDetails = _bookingService.GetGameDetails(gameId);
-                UnavailableTimeRanges = _bookingService.GetUnavailableRanges(gameId) ?? Array.Empty<TimeRange>();
+                GameAndUserDetails = _bookingService.GetBookingInformationForSpecificGame(gameId);
+                UnavailableTimeRanges = _bookingService.GetUnavailableTimeRanges(gameId) ?? Array.Empty<TimeRange>();
                 LoadGameImage();
                 LoadOwnerImage();
                 HasError = false;
@@ -137,14 +137,14 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public bool CheckAvailability(TimeRange timeRange)
+        public bool CheckGameAvailability(TimeRange timeRange)
         {
             try
             {
                 if (timeRange == null)
                     return false;
 
-                return _bookingService.CheckAvailability(GameAndUserDetails.GameId, timeRange);
+                return _bookingService.CheckGameAvailability(GameAndUserDetails.GameId, timeRange);
             }
             catch (Exception exception)
             {
@@ -160,7 +160,7 @@ namespace SearchAndBook.ViewModels
                 if (timeRange == null)
                     throw new ArgumentNullException(nameof(timeRange));
 
-                TotalPrice = _bookingService.CalculateTotalPrice(GameAndUserDetails.Price, timeRange);
+                TotalPrice = _bookingService.CalculateTotalPriceForRentingASpecificGame(GameAndUserDetails.Price, timeRange);
                 return TotalPrice;
             }
             catch (Exception exception)

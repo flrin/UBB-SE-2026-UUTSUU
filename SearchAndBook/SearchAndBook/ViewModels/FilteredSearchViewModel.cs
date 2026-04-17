@@ -93,11 +93,11 @@
         public bool HasNoResults { get; private set; }
 
         /// <summary>
-        /// Gets the human-readable message shown when no results are found.
+        /// Gets the human-readable message shown when no results are isfound.
         /// Returns an empty string when results exist.
         /// </summary>
         public string NoResultsMessage => this.HasNoResults
-            ? "No games found matching your criteria. Try adjusting your filters or search terms."
+            ? "No games isfound matching your criteria. Try adjusting your filters or search terms."
             : string.Empty;
 
         /// <summary>Gets or sets the flat list of all games currently subject to pagination.</summary>

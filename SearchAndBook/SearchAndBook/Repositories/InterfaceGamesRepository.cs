@@ -28,6 +28,6 @@ namespace SearchAndBook.Repositories
         /// </summary>
         /// <param name="userId">The unique identifier of the user.</param>
         /// <returns>A list of other games for the user's feed.</returns>
-        List<Game> GetGamesForFeedOthers(int userId);
+        List<Game> GetRemainingGamesForFeed(int userId);
     }
 }

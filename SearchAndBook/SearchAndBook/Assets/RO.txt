@@ -32803,7 +32803,7 @@
 13158131	Pe Toloacă	Pe Toloaca	Pe Toloaca,Pe Toloacă	47.87026	25.9067	L	FLD	RO		34	146628			0		362	Europe/Bucharest	2025-01-11
 13158132	Biserica Ortodoxă Nouă	Biserica Ortodoxa Noua	Biserica Ortodoxa Noua,Biserica Ortodoxă Nouă	47.921	25.90705	S	CH	RO		34	148667			0		399	Europe/Bucharest	2025-01-11
 13158133	Boişa	Boisa	Boisa,Boişa	47.86607	25.78589	L	FLD	RO		34	151479			0		439	Europe/Bucharest	2025-01-11
-13158134	Colegiul Tehnologic lon Nistor Vicovu de Sus	Colegiul Tehnologic lon Nistor Vicovu de Sus	Colegiul Tehnologic lon Nistor Vicovu de Sus	47.92434	25.66643	S	SCHT	RO		34	151095			0		424	Europe/Bucharest	2025-01-11
+13158134	Colegiul Tehnologic longitude Nistor Vicovu de Sus	Colegiul Tehnologic longitude Nistor Vicovu de Sus	Colegiul Tehnologic longitude Nistor Vicovu de Sus	47.92434	25.66643	S	SCHT	RO		34	151095			0		424	Europe/Bucharest	2025-01-11
 13158135	Biserica Bilca	Biserica Bilca	Biserica Bilca	47.91726	25.7484	S	CH	RO		34	147036			0		409	Europe/Bucharest	2025-01-11
 13158136	Biserica Ortodoxă Centru Vicovu de Sus	Biserica Ortodoxa Centru Vicovu de Sus	Biserica Ortodoxa Centru Vicovu de Sus,Biserica Ortodoxă Centru Vicovu de Sus	47.92432	25.67358	S	CH	RO		34	151095			0		423	Europe/Bucharest	2025-01-11
 13158137	La Arşiţă	La Arsita	La Arsita,La Arşiţă	47.88407	25.66468	V	FRST	RO		34	151077			0		579	Europe/Bucharest	2025-01-11
@@ -39935,7 +39935,7 @@
 13305182	Staţia Sighetu Marmaţiei	Statia Sighetu Marmatiei	Statia Sighetu Marmatiei,Staţia Sighetu Marmaţiei	47.93566	23.88567	S	RSTN	RO		25	106559			0		271	Europe/Bucharest	2025-04-17
 13305183	Valea Bicu	Valea Bicu	Valea Bicu	47.97535	23.75803	H	RVN	RO		25	107715			0		277	Europe/Bucharest	2025-04-17
 13305184	Mânăstirea Săpânţa Peri	Manastirea Sapanta Peri	Manastirea Sapanta Peri,Mânăstirea Săpânţa Peri	47.98315	23.70075	S	MSTY	RO		25	108945			0		250	Europe/Bucharest	2025-04-17
-13305185	Bustul Eroului Revolutiei de la Una Mie Opt Sute Patruzeci şi Opt lon Buteanu Sighetu Marmaţiei	Bustul Eroului Revolutiei de la Una Mie Opt Sute Patruzeci si Opt lon Buteanu Sighetu Marmatiei	Bustul Eroului Revolutiei de la Una Mie Opt Sute Patruzeci si Opt lon Buteanu Sighetu Marmatiei,Bustul Eroului Revolutiei de la Una Mie Opt Sute Patruzeci şi Opt lon Buteanu Sighetu Marmaţiei	47.92794	23.8971	S	MNMT	RO		25	106559			0		272	Europe/Bucharest	2025-04-17
+13305185	Bustul Eroului Revolutiei de la Una Mie Opt Sute Patruzeci şi Opt longitude Buteanu Sighetu Marmaţiei	Bustul Eroului Revolutiei de la Una Mie Opt Sute Patruzeci si Opt longitude Buteanu Sighetu Marmatiei	Bustul Eroului Revolutiei de la Una Mie Opt Sute Patruzeci si Opt longitude Buteanu Sighetu Marmatiei,Bustul Eroului Revolutiei de la Una Mie Opt Sute Patruzeci şi Opt longitude Buteanu Sighetu Marmaţiei	47.92794	23.8971	S	MNMT	RO		25	106559			0		272	Europe/Bucharest	2025-04-17
 13305186	Bustul lui Liviu Rebreanu Sighetu Marmaţiei	Bustul lui Liviu Rebreanu Sighetu Marmatiei	Bustul lui Liviu Rebreanu Sighetu Marmatiei,Bustul lui Liviu Rebreanu Sighetu Marmaţiei	47.92837	23.88859	S	MNMT	RO		25	106559			0		271	Europe/Bucharest	2025-04-17
 13305187	Ductus	Ductus	Ductus	47.86144	23.67197	T	SLP	RO		25	108945			0		984	Europe/Bucharest	2025-04-17
 13305188	La Arsură	La Arsura	La Arsura,La Arsură	47.87773	23.67538	T	SLP	RO		25	108945			0		908	Europe/Bucharest	2025-04-17

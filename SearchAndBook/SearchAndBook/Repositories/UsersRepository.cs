@@ -37,7 +37,7 @@ public class UsersRepository : InterfaceUsersRepository
                 return null;
             }
 
-            return MapUser(reader);
+            return ConvertUserDataToUserObject(reader);
         }
         catch (Exception)
         {
@@ -45,11 +45,11 @@ public class UsersRepository : InterfaceUsersRepository
         }
     }
 
-    public List<User> GetAllGames()
+    public List<User> GetAll()
     {
         try
         {
-            var users = new List<User>();
+            var allUsers = new List<User>();
 
             using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
             connection.Open();
@@ -59,10 +59,10 @@ public class UsersRepository : InterfaceUsersRepository
 
             while (reader.Read())
             {
-                users.Add(MapUser(reader));
+                allUsers.Add(ConvertUserDataToUserObject(reader));
             }
 
-            return users;
+            return allUsers;
         }
         catch (Exception)
         {
@@ -70,7 +70,7 @@ public class UsersRepository : InterfaceUsersRepository
         }
     }
 
-    private static User MapUser(SqlDataReader reader)
+    private static User ConvertUserDataToUserObject(SqlDataReader reader)
     {
         return new User
         {
