@@ -1,0 +1,55 @@
+﻿using System;
+
+namespace SearchAndBook.Domain
+{
+    /// <summary>
+    /// Represents a game listing available for booking.
+    /// </summary>
+    public class Game
+    {
+        /// <summary>
+        /// Gets or sets the unique identifier of the game.
+        /// </summary>
+        public int GameId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the identifier of the owner (user) who listed the game.
+        /// </summary>
+        public int OwnerId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the game.
+        /// </summary>
+        public required string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the rental price of the game.
+        /// </summary>
+        public decimal Price { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum number of players supported by the game.
+        /// </summary>
+        public int MaximumPlayerNumber { get; set; }
+
+        /// <summary>
+        /// Gets or sets the minimum number of players required for the game.
+        /// </summary>
+        public int MinimumPlayerNumber { get; set; }
+
+        /// <summary>
+        /// Gets or sets the description of the game.
+        /// </summary>
+        public required string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets the optional image for the game.
+        /// </summary>
+        public byte[]? Image {  get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the game listing is active.
+        /// </summary>
+        public bool IsActive { get; set; }
+    }
+}

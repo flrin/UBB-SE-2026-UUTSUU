@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using Microsoft.UI.Xaml.Media.Imaging;
-using SearchAndBook.CommandHandler;
-using SearchAndBook.Domain;
-using SearchAndBook.Services;
-using SearchAndBook.Shared;
-using SearchAndBook.Utils;
-
-namespace SearchAndBook.ViewModels
+﻿namespace SearchAndBook.ViewModels
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.ComponentModel;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using System.Windows.Input;
+    using Microsoft.UI.Xaml.Media.Imaging;
+    using SearchAndBook.CommandHandler;
+    using SearchAndBook.Domain;
+    using SearchAndBook.Services;
+    using SearchAndBook.Shared;
+    using SearchAndBook.Utils;
+
     public class FilteredSearchViewModel : INotifyPropertyChanged
     {
         private readonly InterfaceSearchAndFilterService _searchService;
@@ -27,12 +27,17 @@ namespace SearchAndBook.ViewModels
         private const int MinimumPageNumber = 1;
 
         public DateTimeOffset Today => DateTimeOffset.Now.Date;
+
         public DateTimeOffset Tomorrow => DateTimeOffset.Now.Date.AddDays(1);
 
         public FilterCriteria CurrentFilter { get; set; }
+
         public GameDTO[] BaseResults { get; private set; }
+
         public GameDTO[] DisplayedResults { get; private set; }
+
         public bool HasNoResults { get; private set; }
+
         public string NoResultsMessage => HasNoResults
             ? "No games found matching your criteria. Try adjusting your filters or search terms."
             : "";
@@ -40,6 +45,7 @@ namespace SearchAndBook.ViewModels
         public List<GameDTO> Games { get; set; } = new();
 
         private GameDTO? _selectedGame;
+
         public GameDTO? SelectedGame
         {
             get => _selectedGame;
@@ -72,10 +78,14 @@ namespace SearchAndBook.ViewModels
 
         public ObservableCollection<GameDTO> GamesShown { get; set; } = new();
 
+
         private readonly Dictionary<int, BitmapImage?> _gameImages = new();
+
         public Dictionary<int, BitmapImage?> GameImages => _gameImages;
 
+
         private BitmapImage? _selectedGameImage;
+
         public BitmapImage? SelectedGameImage
         {
             get => _selectedGameImage;
@@ -87,6 +97,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private int _currentPage = FirstPage;
+
         public int CurrentPage
         {
             get => _currentPage;
@@ -108,6 +119,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private double _selectedMaximumPrice;
+
         public double SelectedMaximumPrice
         {
             get => _selectedMaximumPrice;
@@ -119,6 +131,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private double _selectedMinimumPlayers;
+
         public double SelectedMinimumPlayers
         {
             get => _selectedMinimumPlayers;
@@ -134,6 +147,7 @@ namespace SearchAndBook.ViewModels
             : Today;
 
         private DateTimeOffset? _selectedStartDate;
+
         public DateTimeOffset? SelectedStartDate
         {
             get => _selectedStartDate;
@@ -153,6 +167,7 @@ namespace SearchAndBook.ViewModels
         public DateTimeOffset MinStartDate => Today;
 
         private DateTimeOffset? _selectedEndDate;
+
         public DateTimeOffset? SelectedEndDate
         {
             get => _selectedEndDate;
@@ -164,6 +179,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private string? _selectedSortOption;
+
         public string? SelectedSortOption
         {
             get => _selectedSortOption;
@@ -179,6 +195,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private string _locationError = string.Empty;
+
         public string LocationError
         {
             get => _locationError;
@@ -190,16 +207,25 @@ namespace SearchAndBook.ViewModels
         }
 
         public ICommand SearchCommand { get; }
+
         public ICommand NextPageCommand { get; }
+
         public ICommand PreviousPageCommand { get; }
+
         public ICommand SelectGameCommand { get; }
+
         public ICommand ApplySelectedUiFiltersCommand { get; }
+
         public ICommand ClearFiltersCommand { get; }
+
         public ICommand GoBackCommand { get; }
 
         public event Action<string>? OnErrorOccurred;
+
         public event Action<int>? OnGameSelectedRequest;
+        
         public event Action? OnGoBackRequest;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public FilteredSearchViewModel(InterfaceSearchAndFilterService searchService, InterfaceGeographicalService geographicalService)
@@ -696,6 +722,7 @@ namespace SearchAndBook.ViewModels
         public ObservableCollection<string> CitySuggestions { get; } = new();
 
         private string _citySearchText = string.Empty;
+
         public string CitySearchText
         {
             get => _citySearchText;

@@ -1,6 +1,6 @@
-﻿using SearchAndBook.Domain;
+﻿namespace SearchAndBook.Repositories;
 
-namespace SearchAndBook.Repositories;
+using SearchAndBook.Domain;
 
 public interface InterfaceUsersRepository : IRepository<User>
 {

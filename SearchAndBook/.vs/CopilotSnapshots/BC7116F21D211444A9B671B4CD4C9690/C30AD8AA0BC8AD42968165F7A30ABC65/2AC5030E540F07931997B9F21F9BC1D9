@@ -15,22 +15,22 @@ namespace SearchAndBook.Domain
         /// <summary>
         /// Gets or sets the username used to log in.
         /// </summary>
-        public string Username { get; set; } = "";
+        public string Username { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the display name for the user.
         /// </summary>
-        public string DisplayName { get; set; } = "";
+        public string DisplayName { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user's email address.
         /// </summary>
-        public string Email { get; set; } = "";
+        public string Email { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the hashed password for the user.
         /// </summary>
-        public string PasswordHash { get; set; } = "";
+        public string PasswordHash { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the user's phone number, if provided.
@@ -70,11 +70,11 @@ namespace SearchAndBook.Domain
         /// <summary>
         /// Gets or sets the city of the user's address.
         /// </summary>
-        public string City { get; set; } = "";
+        public string City { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the country of the user's address.
         /// </summary>
-        public string Country { get; set; } = "";
+        public string Country { get; set; } = string.Empty;
     }
 }

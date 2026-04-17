@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using SearchAndBook.Domain;
-
-namespace SearchAndBook.Repositories
+﻿namespace SearchAndBook.Repositories
 {
+    using System.Collections.Generic;
+    using SearchAndBook.Domain;
+
     public interface InterfaceRentalsRepository : IRepository<TimeRange>
     {
         /// <summary>

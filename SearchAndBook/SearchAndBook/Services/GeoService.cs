@@ -1,15 +1,15 @@
-﻿using SearchAndBook.Domain;
-using SearchAndBook.Utils;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Storage;
-
-namespace SearchAndBook.Services
+﻿namespace SearchAndBook.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Windows.Storage;
+    using SearchAndBook.Domain;
+    using SearchAndBook.Utils;
+
     public class GeoService : InterfaceGeographicalService
     {
         private readonly Dictionary<string, City> _lookup = new();
