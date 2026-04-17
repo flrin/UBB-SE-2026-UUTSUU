@@ -96,7 +96,7 @@ namespace SearchAndBook.ViewModels
                 GameAndUserDetails = gameAndUserDetails ?? throw new ArgumentNullException(nameof(gameAndUserDetails));
                 SelectedTimeRange = selectedTimeRange ?? throw new ArgumentNullException(nameof(selectedTimeRange));
 
-                UnavailableTimeRanges = BookingService.GetUnavailableRanges(GameAndUserDetails.GameId) ?? Array.Empty<TimeRange>();
+                UnavailableTimeRanges = BookingService.GetUnavailableTimeRanges(GameAndUserDetails.GameId) ?? Array.Empty<TimeRange>();
                 TotalPrice = CalculatePrice();
                 LoadImages();
             }
@@ -152,7 +152,7 @@ namespace SearchAndBook.ViewModels
                     if (SelectedTimeRange == null)
                         return 1;
 
-                    return BookingService.CalculateNumberOfDays(SelectedTimeRange);
+                    return BookingService.CalculateNumberOfDaysInAGivenTimeRange(SelectedTimeRange);
                 }
                 catch
                 {
@@ -161,14 +161,14 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public bool CheckAvailability(TimeRange timeRange)
+        public bool CheckGameAvailability(TimeRange timeRange)
         {
             try
             {
                 if (timeRange == null)
                     return false;
 
-                return BookingService.CheckAvailability(GameAndUserDetails.GameId, timeRange);
+                return BookingService.CheckGameAvailability(GameAndUserDetails.GameId, timeRange);
             }
             catch (Exception exception)
             {
@@ -205,7 +205,7 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                return BookingService.CalculateTotalPrice(GameAndUserDetails.Price, SelectedTimeRange);
+                return BookingService.CalculateTotalPriceForRentingASpecificGame(GameAndUserDetails.Price, SelectedTimeRange);
             }
             catch (Exception exception)
             {

@@ -22,13 +22,13 @@ public class BookingServiceTests
         var result = sut.GetGameDetails(1);
 
         Assert.Equal(game.GameId, result.GameId);
-        Assert.Equal(game.Name, result.Name);
-        Assert.Equal(game.Image, result.Image);
-        Assert.Equal(game.Price, result.Price);
+        Assert.Equal(game.NameOfTheGame, result.NameOfTheGame);
+        Assert.Equal(game.GameImage, result.GameImage);
+        Assert.Equal(game.PriceOfTheGame, result.PriceOfTheGame);
         Assert.Equal(owner.City, result.City);
-        Assert.Equal(game.MinimumPlayerNumber, result.MinimumNrPlayers);
-        Assert.Equal(game.MaximumPlayerNumber, result.MaximumNrPlayers);
-        Assert.Equal(game.Description, result.Description);
+        Assert.Equal(game.MinimumPlayerNumber, result.MinimumPlayerNumber);
+        Assert.Equal(game.MaximumPlayerNumber, result.MaximumPlayerNumber);
+        Assert.Equal(game.GameDescription, result.GameDescription);
         Assert.Equal(owner.UserId, result.UserId);
         Assert.Equal(owner.DisplayName, result.DisplayName);
         Assert.Equal(owner.IsSuspended, result.IsSuspended);
@@ -210,13 +210,13 @@ public class BookingServiceTests
         return new Game
         {
             GameId = gameId,
-            OwnerId = ownerId,
-            Name = name,
-            Price = price,
+            OwnerOfTheGameID = ownerId,
+            NameOfTheGame = name,
+            PriceOfTheGame = price,
             MaximumPlayerNumber = maximumPlayers,
             MinimumPlayerNumber = minimumPlayers,
-            Description = description,
-            Image = new byte[] { 1, 2, 3 },
+            GameDescription = description,
+            GameImage = new byte[] { 1, 2, 3 },
             IsActive = true
         };
     }

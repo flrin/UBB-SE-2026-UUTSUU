@@ -9,10 +9,10 @@ namespace SearchAndBook.Services
     public interface InterfaceGeographicalService
     {
         // Initializes the service by reading the text file
-        Task InitializeAsync();
+        Task LoadCitiesFromFileAsync();
 
         // Gets the coordinates and official name of a single city
-        (bool found, string name, double lat, double lon) GetCityDetails(string cityName);
+        (bool isFound, string cityName, double latitude, double longitude) GetCityDetails(string cityName);
 
         // Calculates the distance between two cities, returns null if either is missing
         double? GetDistanceBetweenCities(string city1, string city2);

@@ -72,9 +72,9 @@
         /// </summary>
         /// <param name="filter">The filter object to update.</param>
         /// <param name="selectedMaxPrice">The maximum price chosen in the UI.</param>
-        /// <param name="selectedMinPlayers">The minimum players chosen in the UI.</param>
-        /// <param name="startDate">The selected start date.</param>
-        /// <param name="endDate">The selected end date.</param>
-        void UpdateFilterFromUI(FilterCriteria filter, double selectedMaxPrice, double selectedMinPlayers, DateTime? startDate, DateTime? endDate);
+        /// <param name="selectedMinimumPlayerCount">The minimum players chosen in the UI.</param>
+        /// <param name="selectedStartDate">The selected start date.</param>
+        /// <param name="selectedEndDate">The selected end date.</param>
+        void UpdateFilterFromUI(FilterCriteria filter, double selectedMaxPrice, double selectedMinimumPlayerCount, DateTime? selectedStartDate, DateTime? selectedEndDate);
     }
 }

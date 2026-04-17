@@ -23,10 +23,10 @@ public class GamesRepository : InterfaceGamesRepository
     /// <summary>
     /// Represents the ID used for unauthenticated users.
     /// </summary>
-    public const int AnonimousUserId = -1;
+    public const int AnonymousUserId = -1;
 
     // Used to convert game data to Game object
-    private static Game MapGame(SqlDataReader reader)
+    private static Game ConvertGameDataToGameObject(SqlDataReader reader)
     {
         return new Game
         {
@@ -63,7 +63,7 @@ public class GamesRepository : InterfaceGamesRepository
                 return null;
             }
 
-            return MapGame(reader);
+            return ConvertGameDataToGameObject(reader);
         }
         catch (Exception)
         {
@@ -75,11 +75,11 @@ public class GamesRepository : InterfaceGamesRepository
     /// Gets all active games that are visible in the system.
     /// </summary>
    
-    public List<Game> GetAllGames()
+    public List<Game> GetAll()
     {
         try
         {
-            return GetAllActiveGames(AnonimousUserId);
+            return GetAllActiveGames(AnonymousUserId);
         }
         catch (Exception)
         {
@@ -110,7 +110,7 @@ public class GamesRepository : InterfaceGamesRepository
     {
         try
         {
-            var games = new List<Game>();
+            var filteredGames = new List<Game>();
 
             using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
             connection.Open();
@@ -128,10 +128,10 @@ public class GamesRepository : InterfaceGamesRepository
 
             while (reader.Read())
             {
-                games.Add(MapGame(reader));
+                filteredGames.Add(ConvertGameDataToGameObject(reader));
             }
 
-            return games;
+            return filteredGames;
         }
         catch (Exception)
         {
@@ -151,7 +151,7 @@ public class GamesRepository : InterfaceGamesRepository
     {
         try
         {
-            var games = new List<Game>();
+            var filteredGames = new List<Game>();
 
             var todayDate = DateTime.Today;
             int daysAdded = 1;
@@ -169,10 +169,10 @@ public class GamesRepository : InterfaceGamesRepository
 
             while (reader.Read())
             {
-                games.Add(MapGame(reader));
+                filteredGames.Add(ConvertGameDataToGameObject(reader));
             }
 
-            return games;
+            return filteredGames;
         }
         catch (Exception)
         {
@@ -188,11 +188,11 @@ public class GamesRepository : InterfaceGamesRepository
     /// Used to exclude the user's own games from the feed.
     /// </param>
     /// <returns>A list of games for the "Available Tonight" section.</returns>
-    public List<Game> GetGamesForFeedOthers(int userId)
+    public List<Game> GetRemainingGamesForFeed(int userId)
     {
         try
         {
-            var games = new List<Game>();
+            var filteredGames = new List<Game>();
 
             var todayDate = DateTime.Today;
             var tomorrowDate = todayDate.AddDays(1);
@@ -209,10 +209,10 @@ public class GamesRepository : InterfaceGamesRepository
 
             while (reader.Read())
             {
-                games.Add(MapGame(reader));
+                filteredGames.Add(ConvertGameDataToGameObject(reader));
             }
 
-            return games;
+            return filteredGames;
         }
         catch (Exception)
         {
@@ -230,7 +230,7 @@ public class GamesRepository : InterfaceGamesRepository
     {
         try
         {
-            var games = new List<Game>();
+            var activeGames = new List<Game>();
 
             using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
             connection.Open();
@@ -242,10 +242,10 @@ public class GamesRepository : InterfaceGamesRepository
 
             while (reader.Read())
             {
-                games.Add(MapGame(reader));
+                activeGames.Add(ConvertGameDataToGameObject(reader));
             }
 
-            return games;
+            return activeGames;
         }
         catch (Exception)
         {

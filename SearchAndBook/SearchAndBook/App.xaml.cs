@@ -63,11 +63,11 @@ namespace SearchAndBook
 
             try
             {
-                GlobalGeoService = await GeoService.LoadAsync();
+                GlobalGeoService = await GeographicalService.LoadFromFileAsync();
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"GeoService initialization failed: {ex.Message}");
+                Debug.WriteLine($"GeographicalService initialization failed: {ex.Message}");
             }
 
             

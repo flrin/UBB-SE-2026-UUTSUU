@@ -7,28 +7,28 @@ namespace SearchAndBook.Services;
 
 /// <summary>
 /// Service responsible for handling booking operations, including retrieving game details,
-/// checking availability, and managing rental time ranges.
+/// checking availability, and managing rental time rentaltimeranges.
 /// </summary>
 public class BookingService : InterfaceBookingService
 {
-    private readonly InterfaceGamesRepository gamesRepo;
-    private readonly InterfaceRentalsRepository rentalsRepo;
-    private readonly InterfaceUsersRepository usersRepo;
+    private readonly InterfaceGamesRepository gamesRepository;
+    private readonly InterfaceRentalsRepository rentalsRepository;
+    private readonly InterfaceUsersRepository usersRepository;
 
     /// <summary>
     /// Initializes a new instance of the BookingService class.
     /// </summary>
-    /// <param name="gamesRepo">The games repository.</param>
-    /// <param name="rentalsRepo">The rentals repository.</param>
-    /// <param name="usersRepo">The users repository.</param>
+    /// <param name="gamesRepository">The games repository.</param>
+    /// <param name="rentalsRepository">The rentals repository.</param>
+    /// <param name="usersRepository">The users repository.</param>
     public BookingService(
-        InterfaceGamesRepository gamesRepo,
-        InterfaceRentalsRepository rentalsRepo,
-        InterfaceUsersRepository usersRepo)
+        InterfaceGamesRepository gamesRepository,
+        InterfaceRentalsRepository rentalsRepository,
+        InterfaceUsersRepository usersRepository)
     {
-        this.gamesRepo = gamesRepo;
-        this.rentalsRepo = rentalsRepo;
-        this.usersRepo = usersRepo;
+        this.gamesRepository = gamesRepository;
+        this.rentalsRepository = rentalsRepository;
+        this.usersRepository = usersRepository;
     }
 
     /// <summary>
@@ -36,38 +36,38 @@ public class BookingService : InterfaceBookingService
     /// </summary>
     /// <param name="gameId">The unique identifier of the game.</param>
     /// <returns>A <see cref="BookingDTO"/> containing the game and owner details.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the game or its owner cannot be found.</exception>
-    public BookingDTO GetGameDetails(int gameId)
+    /// <exception cref="InvalidOperationException">Thrown when the game or its owner cannot be isfound.</exception>
+    public BookingDTO GetBookingInformationForSpecificGame(int gameId)
     {
         try
         {
-            var game = gamesRepo.GetGameById(gameId);
-            if (game == null)
+            var bookedGame = gamesRepository.GetGameById(gameId);
+            if (bookedGame == null)
             {
-                throw new InvalidOperationException($"Game with id {gameId} was not found.");
+                throw new InvalidOperationException($"Game with id {gameId} was not isfound.");
             }
 
-            var owner = usersRepo.GetGameById(game.OwnerId);
-            if (owner == null)
+            var gameOwner = usersRepository.GetGameById(bookedGame.OwnerId);
+            if (gameOwner == null)
             {
-                throw new InvalidOperationException($"Owner for game id {gameId} was not found.");
+                throw new InvalidOperationException($"Owner for game id {gameId} was not isfound.");
             }
 
             return new BookingDTO
             {
-                GameId = game.GameId,
-                Name = game.Name,
-                Image = game.Image,
-                Price = game.Price,
-                City = owner.City,
-                MinimumNrPlayers = game.MinimumPlayerNumber,
-                MaximumNrPlayers = game.MaximumPlayerNumber,
-                Description = game.Description,
-                UserId = owner.UserId,
-                DisplayName = owner.DisplayName,
-                IsSuspended = owner.IsSuspended,
-                AvatarUrl = owner.AvatarUrl,
-                CreatedAt = owner.CreatedAt
+                GameId = bookedGame.GameId,
+                Name = bookedGame.Name,
+                Image = bookedGame.Image,
+                Price = bookedGame.Price,
+                City = gameOwner.City,
+                MinimumNrPlayers = bookedGame.MinimumPlayerNumber,
+                MaximumNrPlayers = bookedGame.MaximumPlayerNumber,
+                Description = bookedGame.Description,
+                UserId = gameOwner.UserId,
+                DisplayName = gameOwner.DisplayName,
+                IsSuspended = gameOwner.IsSuspended,
+                AvatarUrl = gameOwner.AvatarUrl,
+                CreatedAt = gameOwner.CreatedAt
             };
         }
         catch (Exception exception)
@@ -78,20 +78,20 @@ public class BookingService : InterfaceBookingService
     }
 
     /// <summary>
-    /// Retrieves all the time ranges during which a specific game is unavailable.
+    /// Retrieves all the time rentaltimeranges during which a specific game is unavailable.
     /// </summary>
     /// <param name="gameId">The unique identifier of the game.</param>
     /// <returns>An array of <see cref="TimeRange"/> representing the unavailable periods.</returns>
-    public TimeRange[] GetUnavailableRanges(int gameId)
+    public TimeRange[] GetUnavailableTimeRanges(int gameId)
     {
         try
         {
-            return rentalsRepo
-                .GetUnavailableRanges(gameId)
+            return rentalsRepository
+                .GetUnavailableTimeRanges(gameId)
                 .ToArray();
         } catch (Exception exception)
         {
-            throw new InvalidOperationException($"Failed to retrieve unavailable time ranges for game {gameId}.", exception);
+            throw new InvalidOperationException($"Failed to retrieve unavailable time rentaltimeranges for game {gameId}.", exception);
         }
     }
 
@@ -101,11 +101,11 @@ public class BookingService : InterfaceBookingService
     /// <param name="gameId">The unique identifier of the game.</param>
     /// <param name="timeRange">The requested <see cref="TimeRange"/> for the booking.</param>
     /// <returns><c>true</c> if the game is available for the specified range; otherwise, <c>false</c>.</returns>
-    public bool CheckAvailability(int gameId, TimeRange timeRange)
+    public bool CheckGameAvailability(int gameId, TimeRange timeRange)
     {
         try
         {
-            return rentalsRepo.CheckAvailability(timeRange, gameId);
+            return rentalsRepository.CheckGameAvailability(timeRange, gameId);
         } catch (Exception exception)
         {
             throw new InvalidOperationException($"Failed to check availability for game {gameId}.", exception);
@@ -118,7 +118,7 @@ public class BookingService : InterfaceBookingService
     /// <param name="price">The daily renting price</param>
     /// <param name="timeRange">The total time timeRange of renting</param>
     /// <returns>total price calculated as a decimal</returns>
-    public decimal CalculateTotalPrice(decimal price, TimeRange timeRange)
+    public decimal CalculateTotalPriceForRentingASpecificGame(decimal price, TimeRange timeRange)
     {
         const int MAXIMUM_DAY_NUMBER_FOR_DEFAULT = 0;
         const int DEFAULT_DAY_NUMBER = 1;
@@ -135,7 +135,7 @@ public class BookingService : InterfaceBookingService
     /// </summary>
     /// <param name="selectedTimeRange"></param>
     /// <returns></returns>
-    public int CalculateNumberOfDays(TimeRange selectedTimeRange)
+    public int CalculateNumberOfDaysInAGivenTimeRange(TimeRange selectedTimeRange)
     {
         int days = (selectedTimeRange.EndTime - selectedTimeRange.StartTime).Days + 1;
         return days <= 0 ? 1 : days;

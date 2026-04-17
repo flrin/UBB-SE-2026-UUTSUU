@@ -90,8 +90,8 @@ public class SearchAndFilterServiceIntegrationTests
         return new GameDTO
         {
             GameId = id,
-            Name = name,
-            Price = price,
+            NameOfTheGame = name,
+            PriceOfTheGame = price,
             City = city,
             MaximumPlayerNumber = maximumPlayers,
             MinimumPlayerNumber = minimumPlayers,
@@ -103,12 +103,12 @@ public class SearchAndFilterServiceIntegrationTests
         return new Game
         {
             GameId = id,
-            OwnerId = ownerId,
-            Name = name,
-            Price = price,
+            OwnerOfTheGameID = ownerId,
+            NameOfTheGame = name,
+            PriceOfTheGame = price,
             MaximumPlayerNumber = maximumPlayers,
             MinimumPlayerNumber = minimumPlayers,
-            Description = "Description",
+            GameDescription = "Description",
         };
     }
 

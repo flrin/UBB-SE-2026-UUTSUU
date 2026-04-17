@@ -15,21 +15,21 @@ namespace SearchAndBook.Services
         /// <returns>A <see cref="BookingDTO"/> containing the game details.</returns>
         
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the game or its owner cannot be found, or when retrieval fails.
+        /// Thrown when the game or its owner cannot be isfound, or when retrieval fails.
         /// </exception>
-        BookingDTO GetGameDetails(int gameId);
+        BookingDTO GetBookingInformationForSpecificGame(int gameId);
 
         /// <summary>
-        /// Retrieves all unavailable time ranges for a specific game.
+        /// Retrieves all unavailable time rentaltimeranges for a specific game.
         /// </summary>
         /// <param name="gameId">The unique identifier of the game.</param>
         /// <returns>An array of <see cref="TimeRange"/> representing periods when the game is unavailable.</returns>
 
         
         /// <exception cref="InvalidOperationException">
-        /// Thrown when retrieval of unavailable ranges fails.
+        /// Thrown when retrieval of unavailable rentaltimeranges fails.
         /// </exception>
-        TimeRange[] GetUnavailableRanges(int gameId);
+        TimeRange[] GetUnavailableTimeRanges(int gameId);
 
         /// <summary>
         /// Checks if a game is available for booking during a specified time range.
@@ -41,8 +41,8 @@ namespace SearchAndBook.Services
         /// <exception cref="InvalidOperationException">
         /// Thrown when the availability check fails.
         /// </exception>
-        bool CheckAvailability(int gameId, TimeRange range);
-        decimal CalculateTotalPrice(decimal price, TimeRange timeRange);
-        int CalculateNumberOfDays(TimeRange selectedTimeRange);
+        bool CheckGameAvailability(int gameId, TimeRange range);
+        decimal CalculateTotalPriceForRentingASpecificGame(decimal price, TimeRange timeRange);
+        int CalculateNumberOfDaysInAGivenTimeRange(TimeRange selectedTimeRange);
     }
 }
