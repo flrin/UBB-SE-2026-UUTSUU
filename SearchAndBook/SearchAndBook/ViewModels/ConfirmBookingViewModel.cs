@@ -13,6 +13,7 @@ namespace SearchAndBook.ViewModels
     internal class ConfirmBookingViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
+
         public event Action<string>? OnErrorOccurred;
 
         private const long START_OF_STREAM_POSTION = 0;
@@ -23,6 +24,7 @@ namespace SearchAndBook.ViewModels
         private readonly InterfaceBookingService BookingService;
 
         private BookingDTO _gameAndUserDetails;
+
         public BookingDTO GameAndUserDetails
         {
             get => _gameAndUserDetails;
@@ -36,6 +38,7 @@ namespace SearchAndBook.ViewModels
         public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
 
         private TimeRange _selectedTimeRange;
+
         public TimeRange SelectedTimeRange
         {
             get => _selectedTimeRange;
@@ -50,6 +53,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private decimal _totalPrice;
+
         public decimal TotalPrice
         {
             get => _totalPrice;
@@ -61,9 +65,11 @@ namespace SearchAndBook.ViewModels
         }
 
         public string StartDate => SelectedTimeRange?.StartTime.ToString("dd MMM yyyy") ?? "-";
+
         public string EndDate => SelectedTimeRange?.EndTime.ToString("dd MMM yyyy") ?? "-";
 
         private BitmapImage? _ownerImage;
+
         public BitmapImage? OwnerImage
         {
             get => _ownerImage;
@@ -75,6 +81,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private BitmapImage? _gameImage;
+
         public BitmapImage? GameImage
         {
             get => _gameImage;
@@ -86,6 +93,7 @@ namespace SearchAndBook.ViewModels
         }
 
         public event Action? OnGoBackRequested;
+
         public event Action? OnConfirmBookingRequested;
 
         public ConfirmBookingViewModel(InterfaceBookingService bookingService, BookingDTO gameAndUserDetails, TimeRange selectedTimeRange)
