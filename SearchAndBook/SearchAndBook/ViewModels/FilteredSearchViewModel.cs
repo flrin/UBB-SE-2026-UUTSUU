@@ -43,7 +43,7 @@
         private readonly InterfaceGeographicalService geographicalService;
 
         /// <summary>Cache of loaded BitmapImages keyed by game ID.</summary>
-        private readonly Dictionary<int, BitmapImage?> gameImages = new ();
+        private readonly Dictionary<int, BitmapImage?> gameImages = new();
 
         private BitmapImage? selectedGameImage;
         private string citySearchText = string.Empty;
@@ -69,7 +69,7 @@
         public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>Gets or sets the collection of games currently visible on the active page. Bound directly to the UI list/grid.</summary>
-        public ObservableCollection<GameDTO> GamesShown { get; set; } = new ();
+        public ObservableCollection<GameDTO> VisibleGames { get; set; } = new();
 
         /// <summary>Gets the images.</summary>
         public Dictionary<int, BitmapImage?> GameImages => this.gameImages;
@@ -101,7 +101,7 @@
             : string.Empty;
 
         /// <summary>Gets or sets the flat list of all games currently subject to pagination.</summary>
-        public List<GameDTO> Games { get; set; } = new ();
+        public List<GameDTO> Games { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the game the user has just tapped/clicked.
@@ -201,7 +201,7 @@
         /// Gets the earliest date the end-date picker will allow.
         /// Equals the day after <see cref="SelectedStartDate"/> when a start date is set; otherwise defaults to today.
         /// </summary>
-        public DateTimeOffset MinEndDate => this.SelectedStartDate.HasValue
+        public DateTimeOffset MinimumEndDate => this.SelectedStartDate.HasValue
             ? this.SelectedStartDate.Value.AddDays(1)
             : this.Today;
 
@@ -216,7 +216,7 @@
             {
                 this.selectedStartDate = value;
                 this.OnPropertyChanged(nameof(this.SelectedStartDate));
-                this.OnPropertyChanged(nameof(this.MinEndDate));
+                this.OnPropertyChanged(nameof(this.MinimumEndDate));
 
                 if (this.SelectedEndDate.HasValue && value.HasValue && this.SelectedEndDate.Value <= value.Value)
                 {
@@ -226,7 +226,7 @@
         }
 
         /// <summary>Gets the earliest date that can be selected as a start date (today).</summary>
-        public DateTimeOffset MinStartDate => this.Today;
+        public DateTimeOffset MinimumStartDate => this.Today;
 
         /// <summary>Gets or sets the availability window end date chosen by the user.</summary>
         public DateTimeOffset? SelectedEndDate
@@ -315,22 +315,22 @@
             this.PreviousPageCommand = new RelayCommand(_ => this.PreviousPage());
             this.GoBackCommand = new RelayCommand(_ => this.GoBack());
 
-            this.SelectGameCommand = new RelayCommand(obj =>
+            this.SelectGameCommand = new RelayCommand(selectedGameObject =>
             {
                 try
                 {
-                    if (obj is GameDTO game)
+                    if (selectedGameObject is GameDTO selectedGameDto)
                     {
-                        if (this.GameImages.TryGetValue(game.GameId, out var image))
+                        if (this.GameImages.TryGetValue(selectedGameDto.GameId, out var gameImage))
                         {
-                            this.SelectedGameImage = image;
+                            this.SelectedGameImage = gameImage;
                         }
                         else
                         {
                             this.SelectedGameImage = null;
                         }
 
-                        this.SelectGame(game.GameId);
+                        this.SelectGame(selectedGameDto.GameId);
                     }
                 }
                 catch (Exception ex)
@@ -414,7 +414,7 @@
         /// without calling the search service. Resets the page to the first page.
         /// </summary>
         /// <param name="discoveryResults">Array of games to display. Passing <c>null</c> is treated as an empty array.</param>
-        public void LoadDiscoveryResutls(GameDTO[] discoveryResults)
+        public void LoadDiscoveryResults(GameDTO[] discoveryResults)
         {
             try
             {
@@ -503,7 +503,8 @@
         /// <summary>Removes the name filter from <see cref="CurrentFilter"/> and re-applies the remaining filters.</summary>
         public void RemoveNameFilter()
         {
-            try { 
+            try
+            {
                 this.CurrentFilter.Name = null;
                 this.ApplyFilters();
             }
@@ -513,23 +514,31 @@
         /// <summary>Removes the city filter from <see cref="CurrentFilter"/> and re-applies the remaining filters.</summary>
         public void RemoveCityFilter()
         {
-            try { this.CurrentFilter.City = null;
-                this.ApplyFilters(); }
+            try
+            {
+                this.CurrentFilter.City = null;
+                this.ApplyFilters();
+            }
             catch (Exception ex) { this.RaiseError($"Could not remove city filter. {ex.Message}"); }
         }
 
         /// <summary>Removes the maximum-price filter from <see cref="CurrentFilter"/> and re-applies the remaining filters.</summary>
         public void RemovePriceFilter()
         {
-            try { this.CurrentFilter.MaximumPrice = null;
-                this.ApplyFilters(); }
+            try
+            {
+                this.CurrentFilter.MaximumPrice = null;
+                this.ApplyFilters();
+            }
             catch (Exception ex) { this.RaiseError($"Could not remove price filter. {ex.Message}"); }
         }
 
         /// <summary>Removes the player-count filter from <see cref="CurrentFilter"/> and re-applies the remaining filters.</summary>
         public void RemovePlayersFilter()
         {
-            try { this.CurrentFilter.PlayerCount = null;
+            try
+            {
+                this.CurrentFilter.PlayerCount = null;
                 this.ApplyFilters();
             }
             catch (Exception ex) { this.RaiseError($"Could not remove players filter. {ex.Message}"); }
@@ -538,7 +547,9 @@
         /// <summary>Removes the availability-date filter from <see cref="CurrentFilter"/> and re-applies the remaining filters.</summary>
         public void RemoveDateFilter()
         {
-            try { this.CurrentFilter.AvailabilityRange = null;
+            try
+            {
+                this.CurrentFilter.AvailabilityRange = null;
                 this.ApplyFilters();
             }
             catch (Exception ex) { this.RaiseError($"Could not remove date filter. {ex.Message}"); }
@@ -547,7 +558,9 @@
         /// <summary>Sets the sort order to <see cref="SortOption.PriceAscending"/> and re-applies filters.</summary>
         public void SetPriceAscendingSort()
         {
-            try { this.CurrentFilter.SortOption = SortOption.PriceAscending;
+            try
+            {
+                this.CurrentFilter.SortOption = SortOption.PriceAscending;
                 this.ApplyFilters();
             }
             catch (Exception ex) { this.RaiseError($"Could not sort by ascending price. {ex.Message}"); }
@@ -556,7 +569,9 @@
         /// <summary>Sets the sort order to <see cref="SortOption.PriceDescending"/> and re-applies filters.</summary>
         public void SetPriceDescendingSort()
         {
-            try { this.CurrentFilter.SortOption = SortOption.PriceDescending;
+            try
+            {
+                this.CurrentFilter.SortOption = SortOption.PriceDescending;
                 this.ApplyFilters();
             }
             catch (Exception ex) { this.RaiseError($"Could not sort by descending price. {ex.Message}"); }
@@ -565,7 +580,9 @@
         /// <summary>Clears the sort option (<see cref="SortOption.None"/>) and re-applies filters.</summary>
         public void ClearSorting()
         {
-            try { this.CurrentFilter.SortOption = SortOption.None;
+            try
+            {
+                this.CurrentFilter.SortOption = SortOption.None;
                 this.ApplyFilters();
             }
             catch (Exception ex) { this.RaiseError($"Could not clear sorting. {ex.Message}"); }
@@ -661,15 +678,15 @@
         /// and the page is reset to the first page.
         /// Validates the currently selected date range before calling the service.
         /// </summary>
-        /// <param name="criteria">The filter criteria to pass to the search service.</param>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="criteria"/> is <c>null</c>.</exception>
-        public void SearchGamesByFilter(FilterCriteria criteria)
+        /// <param name="filterCriteria">The filter criteria to pass to the search service.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="filterCriteria"/> is <c>null</c>.</exception>
+        public void SearchGamesByFilter(FilterCriteria filterCriteria)
         {
             try
             {
-                if (criteria == null)
+                if (filterCriteria == null)
                 {
-                    throw new ArgumentNullException(nameof(criteria));
+                    throw new ArgumentNullException(nameof(filterCriteria));
                 }
 
                 if (!this.searchService.IsValidDateRange(
@@ -680,7 +697,7 @@
                     return;
                 }
 
-                this.Games = this.searchService.SearchGamesByFilter(criteria)?.ToList() ?? new List<GameDTO>();
+                this.Games = this.searchService.SearchGamesByFilter(filterCriteria)?.ToList() ?? new List<GameDTO>();
                 this.DisplayedResults = this.Games.ToArray();
                 this.BaseResults = this.DisplayedResults;
                 this.CurrentPage = FirstPage;
@@ -764,34 +781,34 @@
         }
 
         /// <summary>
-        /// Slices <see cref="Games"/> to the current page window, populates <see cref="GamesShown"/>,
+        /// Slices <see cref="Games"/> to the current page window, populates <see cref="VisibleGames"/>,
         /// and asynchronously loads any missing game images.
         /// </summary>
         private async void RefreshPage()
         {
             try
             {
-                this.GamesShown.Clear();
+                this.VisibleGames.Clear();
 
                 var pageListings = this.Games
                     .Skip((this.CurrentPage - 1) * ItemsPerPage)
                     .Take(ItemsPerPage)
                     .ToList();
 
-                foreach (var game in pageListings)
+                foreach (var gameItem in pageListings)
                 {
-                    this.GamesShown.Add(game);
+                    this.VisibleGames.Add(gameItem);
                 }
 
-                foreach (var game in pageListings)
+                foreach (var gameItem in pageListings)
                 {
-                    if (game.Image != null && game.GameImage == null)
+                    if (gameItem.Image != null && gameItem.GameImage == null)
                     {
-                        await this.LoadGameImage(game);
+                        await this.LoadGameImage(gameItem);
                     }
                 }
 
-                this.OnPropertyChanged(nameof(this.GamesShown));
+                this.OnPropertyChanged(nameof(this.VisibleGames));
             }
             catch (Exception ex) { this.RaiseError($"Could not refresh the page. {ex.Message}"); }
         }
@@ -804,22 +821,22 @@
         }
 
         /// <summary>
-        /// Converts <paramref name="game"/>'s raw image bytes to a <see cref="BitmapImage"/>
+        /// Converts <paramref name="gameDTO"/>'s raw image bytes to a <see cref="BitmapImage"/>
         /// and stores the result in both <see cref="GameDTO.GameImage"/> and <see cref="gameImages"/>.
         /// On failure the image is set to <c>null</c> rather than propagating the exception.
         /// </summary>
-        /// <param name="game">The game whose image should be loaded.</param>
-        private async Task LoadGameImage(GameDTO game)
+        /// <param name="gameDTO">The game whose image should be loaded.</param>
+        private async Task LoadGameImage(GameDTO gameDTO)
         {
             try
             {
-                game.GameImage = await GameImage.ToBitmapImage(game.Image);
-                this.gameImages[game.GameId] = game.GameImage;
+                gameDTO.GameImage = await GameImage.ToBitmapImage(gameDTO.Image);
+                this.gameImages[gameDTO.GameId] = gameDTO.GameImage;
             }
             catch
             {
-                game.GameImage = null;
-                this.gameImages[game.GameId] = null;
+                gameDTO.GameImage = null;
+                this.gameImages[gameDTO.GameId] = null;
             }
         }
 
@@ -837,10 +854,10 @@
 
                 if (!string.IsNullOrWhiteSpace(input) && input.Length >= MinimumCharactersForCitySearch)
                 {
-                    var matches = this.geographicalService.GetCitySuggestions(input);
-                    foreach (var match in matches)
+                    var cityMatches = this.geographicalService.GetCitySuggestions(input);
+                    foreach (var city in cityMatches)
                     {
-                        this.CitySuggestions.Add(match);
+                        this.CitySuggestions.Add(city);
                     }
                 }
             }

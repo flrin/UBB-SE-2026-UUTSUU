@@ -45,7 +45,7 @@ namespace SearchAndBook.Views.Test
                     PlayersText = "2 - 5 players",
                     PriceText = "9 RON / day",
                     ImageSource = new BitmapImage(new System.Uri("ms-appx:///Assets/SeedImages/carcassonne.jpg"))
-                }
+                },
             };
         }
     }
@@ -53,10 +53,15 @@ namespace SearchAndBook.Views.Test
     public class GameFeedItem
     {
         public required int GameId { get; set; }
+
         public required string Title { get; set; }
+
         public required string Location { get; set; }
+
         public required string PlayersText { get; set; }
+
         public required string PriceText { get; set; }
+
         public required BitmapImage ImageSource { get; set; }
     }
 }

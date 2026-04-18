@@ -34,6 +34,7 @@ namespace SearchAndBook.Views
         {
             InitializeComponent();
         }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
