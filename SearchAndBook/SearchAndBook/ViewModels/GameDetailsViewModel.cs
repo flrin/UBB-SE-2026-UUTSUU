@@ -16,6 +16,7 @@ namespace SearchAndBook.ViewModels
     {
         private const long UNREGISTERED_USER_ID = -1;
         private const long START_OF_STREAM_POSTION = 0;
+        private const decimal DefaultTotalPrice = 0;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -166,8 +167,8 @@ namespace SearchAndBook.ViewModels
             catch (Exception exception)
             {
                 OnMessageRequested?.Invoke($"Could not calculate price. {exception.Message}");
-                TotalPrice = 0;
-                return 0;
+                TotalPrice = DefaultTotalPrice;
+                return DefaultTotalPrice;
             }
         }
 

@@ -14,6 +14,7 @@ public class BookingService : InterfaceBookingService
     private readonly InterfaceGamesRepository gamesRepository;
     private readonly InterfaceRentalsRepository rentalsRepository;
     private readonly InterfaceUsersRepository usersRepository;
+    private const int MinimumValidDayCount = 1;
 
     /// <summary>
     /// Initializes a new instance of the BookingService class.
@@ -120,13 +121,12 @@ public class BookingService : InterfaceBookingService
     /// <returns>total price calculated as a decimal</returns>
     public decimal CalculateTotalPriceForRentingASpecificGame(decimal price, TimeRange timeRange)
     {
-        const int MAXIMUM_DAY_NUMBER_FOR_DEFAULT = 0;
-        const int DEFAULT_DAY_NUMBER = 1;
+        int days = (timeRange.EndTime - timeRange.StartTime).Days + MinimumValidDayCount;
 
-        int days = (timeRange.EndTime - timeRange.StartTime).Days + 1;
-
-        if (days <= MAXIMUM_DAY_NUMBER_FOR_DEFAULT)
-            days = DEFAULT_DAY_NUMBER;
+        if (days < MinimumValidDayCount)
+        {
+            days = MinimumValidDayCount;
+        }
         return days * price;
     }
 
@@ -137,7 +137,7 @@ public class BookingService : InterfaceBookingService
     /// <returns></returns>
     public int CalculateNumberOfDaysInAGivenTimeRange(TimeRange selectedTimeRange)
     {
-        int days = (selectedTimeRange.EndTime - selectedTimeRange.StartTime).Days + 1;
-        return days <= 0 ? 1 : days;
+        int days = (selectedTimeRange.EndTime - selectedTimeRange.StartTime).Days + MinimumValidDayCount;
+        return days < MinimumValidDayCount ? MinimumValidDayCount : days;
     }
 }

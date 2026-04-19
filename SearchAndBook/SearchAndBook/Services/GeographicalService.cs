@@ -18,6 +18,9 @@ namespace SearchAndBook.Services
         private const int MinimumRequiredColumns = 15;
         private const string FeatureClassPopulatedPlace = "P";
         private const string FeatureClassCapitalCity = "PPLC";
+        private const double DefaultCoordinateValue = 0;
+        private const string EmptyCityName = "";
+        private const int MaximumCitySuggestions = 10;
 
         private const int ColumnIndexName = 1;
         private const int ColumnIndexAsciiName = 2;
@@ -112,7 +115,7 @@ namespace SearchAndBook.Services
                 return (true, city.MainName, city.Latitude, city.Longitude);
             }
 
-            return (false, "", 0, 0);
+            return (false, EmptyCityName, DefaultCoordinateValue, DefaultCoordinateValue);
         }
 
         private string NormalizeCityName(string city)
@@ -159,7 +162,7 @@ namespace SearchAndBook.Services
                 .Where(cityLookupEntry => cityLookupEntry.Key.Contains(normalizedPartialName))
                 .Select(cityLookupEntry => cityLookupEntry.Value.MainName)
                 .Distinct()
-                .Take(10)
+                .Take(MaximumCitySuggestions)
                 .ToList();
         }
     }

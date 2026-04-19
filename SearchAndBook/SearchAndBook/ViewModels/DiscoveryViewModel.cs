@@ -16,6 +16,10 @@ namespace SearchAndBook.ViewModels
     public class DiscoveryViewModel : INotifyPropertyChanged
     {
         private const int ItemsPerPage = 10;
+        private const int FirstDayOfMonth = 1;
+        private const int MidnightHour = 0;
+        private const int MidnightMinute = 0;
+        private const int MidnightSecond = 0;
 
         public event Action? OnPageChanged;
 
@@ -47,7 +51,14 @@ namespace SearchAndBook.ViewModels
 
         public DateTimeOffset MinEndDate =>
         SelectedStartDate.HasValue
-        ? new DateTimeOffset(SelectedStartDate.Value.Year, SelectedStartDate.Value.Month, 1, 0, 0, 0, TimeSpan.Zero)
+        ? new DateTimeOffset(
+            SelectedStartDate.Value.Year,
+            SelectedStartDate.Value.Month,
+            FirstDayOfMonth,
+            MidnightHour,
+            MidnightMinute,
+            MidnightSecond,
+            TimeSpan.Zero)
         : DateTimeOffset.Now.Date;
 
         private DateTimeOffset? _selectedStartDate;
