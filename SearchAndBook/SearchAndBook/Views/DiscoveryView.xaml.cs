@@ -72,9 +72,9 @@ namespace SearchAndBook.Views
             if (ViewModel?.SelectedStartDate.HasValue == true)
             {
                 var date = args.Item.Date.Date;
-                var startDate = ViewModel.SelectedStartDate.Value.Date;
+                var selectedStartDate = ViewModel.SelectedStartDate.Value.Date;
 
-                if (date < startDate)
+                if (date < selectedStartDate)
                 {
                     args.Item.IsBlackout = true;
                 }

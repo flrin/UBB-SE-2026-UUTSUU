@@ -145,7 +145,7 @@
                 </StackPanel>
 
                 <ListView Grid.Row="1"
-                          ItemsSource="{Binding GamesShown, Mode=OneWay}"
+                          ItemsSource="{Binding VisibleGames, Mode=OneWay}"
                           SelectionMode="Single"
                           SelectedItem="{Binding SelectedGame, Mode=TwoWay}">
                     <ListView.ItemTemplate>

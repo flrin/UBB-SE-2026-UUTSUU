@@ -5,9 +5,10 @@ namespace SearchAndBook.Shared
     public class SessionContext
     {
         private const int UNREGISTERED_USER_ID = -1;
-        private static SessionContext? _instance;
+        private static SessionContext? instance;
 
         public int UserId { get; set; }
+
         public bool IsLoggedIn { get; set; }
 
         private SessionContext()
@@ -18,11 +19,12 @@ namespace SearchAndBook.Shared
 
         public static SessionContext GetInstance()
         {
-            if (_instance == null)
+            if (instance == null)
             {
-                _instance = new SessionContext();
+                instance = new SessionContext();
             }
-            return _instance;
+
+            return instance;
         }
 
         public void Populate(User user)

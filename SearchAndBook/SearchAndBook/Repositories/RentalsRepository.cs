@@ -27,7 +27,7 @@ public class RentalsRepository : InterfaceRentalsRepository
     /// Retrieves a rental time range by its unique identifier.
     /// </summary>
     /// <param name="id">The rental identifier.</param>
-    /// <returns>The rental time range if found; otherwise, null.</returns>
+    /// <returns>The rental time range if isfound; otherwise, null.</returns>
     public TimeRange? GetGameById(int id)
     {
         try
@@ -56,14 +56,14 @@ public class RentalsRepository : InterfaceRentalsRepository
     }
 
     /// <summary>
-    /// Retrieves all rental time ranges.
+    /// Retrieves all rental time rentaltimeranges.
     /// </summary>
-    /// <returns>A list of all rental time ranges.</returns>
-    public List<TimeRange> GetAllGames()
+    /// <returns>A list of all rental time rentaltimeranges.</returns>
+    public List<TimeRange> GetAll()
     {
         try
         {
-            var ranges = new List<TimeRange>();
+            var rentalTimeRanges = new List<TimeRange>();
 
             using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
             connection.Open();
@@ -73,12 +73,12 @@ public class RentalsRepository : InterfaceRentalsRepository
 
             while (reader.Read())
             {
-                ranges.Add(new TimeRange(
+				rentalTimeRanges.Add(new TimeRange(
                     Convert.ToDateTime(reader["start_date"]),
                     Convert.ToDateTime(reader["end_date"])));
             }
 
-            return ranges;
+            return rentalTimeRanges;
         }
         catch (Exception)
         {
@@ -87,15 +87,15 @@ public class RentalsRepository : InterfaceRentalsRepository
     }
 
     /// <summary>
-    /// Retrieves unavailable rental time ranges for a specific game.
+    /// Retrieves unavailable rental time rentaltimeranges for a specific game.
     /// </summary>
     /// <param name="gameId">The game identifier.</param>
-    /// <returns>A list of time ranges when the game is unavailable.</returns>
-    public List<TimeRange> GetUnavailableRanges(int gameId)
+    /// <returns>A list of time rentaltimeranges when the game is unavailable.</returns>
+    public List<TimeRange> GetUnavailableTimeRanges(int gameId)
     {
         try
         {
-            var ranges = new List<TimeRange>();
+            var rentalTimeRanges = new List<TimeRange>();
 
             using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
             connection.Open();
@@ -110,10 +110,10 @@ public class RentalsRepository : InterfaceRentalsRepository
                 var start = Convert.ToDateTime(reader["start_date"]);
                 var end = Convert.ToDateTime(reader["end_date"]);
 
-                ranges.Add(new TimeRange(start, end));
+				rentalTimeRanges.Add(new TimeRange(start, end));
             }
 
-            return ranges;
+            return rentalTimeRanges;
         }
         catch (Exception)
         {
@@ -127,7 +127,7 @@ public class RentalsRepository : InterfaceRentalsRepository
     /// <param name="range">The requested rental time range.</param>
     /// <param name="gameId">The game identifier.</param>
     /// <returns>True if the game is available; otherwise, false.</returns>
-    public bool CheckAvailability(TimeRange range, int gameId)
+    public bool CheckGameAvailability(TimeRange range, int gameId)
     {
         try
         {
