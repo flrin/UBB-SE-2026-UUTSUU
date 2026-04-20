@@ -9,7 +9,7 @@ namespace SearchAndBook.Tests.ViewModels;
 public class FilteredSearchViewModelTests
 {
     [Fact]
-    public void LoadSearchResults_ReturnsResultsFromSearchService()
+    public void LoadSearchResults_WithValidFilter_ReturnsResultsFromSearchService()
     {
         var (sut, searchService, _, errors) = CreateSut();
         var results = new[]
@@ -25,12 +25,12 @@ public class FilteredSearchViewModelTests
         Assert.Empty(errors);
         Assert.Equal(results, sut.BaseResults);
         Assert.Equal(results, sut.DisplayedResults);
-        Assert.Equal(2, sut.GamesShown.Count);
+        Assert.Equal(2, sut.VisibleGames.Count);
         Assert.False(sut.HasNoResults);
     }
 
     [Fact]
-    public void LoadSearchResults_WhenServiceThrows_RaisesErrorAndClearsResults()
+    public void LoadSearchResults_WhenServiceThrowsException_RaisesErrorAndClearsResults()
     {
         var (sut, searchService, _, errors) = CreateSut();
         searchService.Setup(service => service.SearchGamesByFilter(It.IsAny<FilterCriteria>())).Throws(new Exception("boom"));
@@ -41,31 +41,31 @@ public class FilteredSearchViewModelTests
         Assert.Contains("Could not load search results.", errors[0]);
         Assert.Empty(sut.BaseResults);
         Assert.Empty(sut.DisplayedResults);
-        Assert.Empty(sut.GamesShown);
+        Assert.Empty(sut.VisibleGames);
         Assert.True(sut.HasNoResults);
     }
 
     [Fact]
-    public void LoadDiscoveryResults_ReturnsProvidedResults()
+    public void LoadDiscoveryResults_WithValidResults_ReturnsProvidedResults()
     {
         var (sut, _, _, errors) = CreateSut();
         var results = new[] { CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2) };
 
-        sut.LoadDiscoveryResutls(results);
+        sut.LoadDiscoveryResults(results);
 
         Assert.Empty(errors);
         Assert.Equal(results, sut.BaseResults);
         Assert.Equal(results, sut.DisplayedResults);
-        Assert.Single(sut.GamesShown);
+        Assert.Single(sut.VisibleGames);
         Assert.False(sut.HasNoResults);
     }
 
     [Fact]
-    public void ApplyFilters_ValidDateRange_DelegatesToSearchService()
+    public void ApplyFilters_WithValidDateRange_DelegatesToSearchService()
     {
         var (sut, searchService, _, errors) = CreateSut();
         var results = new[] { CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2) };
-        sut.LoadDiscoveryResutls(new[] { CreateGameDto(2, "Azul", 15m, "Iasi", 4, 2) });
+        sut.LoadDiscoveryResults(new[] { CreateGameDto(2, "Azul", 15m, "Iasi", 4, 2) });
         sut.CurrentFilter.AvailabilityRange = new TimeRange(new DateTime(2026, 1, 1), new DateTime(2026, 1, 2));
         searchService.Setup(service => service.ApplyFilters(It.IsAny<GameDTO[]>(), It.IsAny<FilterCriteria>())).Returns(results);
 
@@ -73,15 +73,15 @@ public class FilteredSearchViewModelTests
 
         Assert.Empty(errors);
         Assert.Equal(results, sut.DisplayedResults);
-        Assert.Single(sut.GamesShown);
+        Assert.Single(sut.VisibleGames);
         searchService.Verify(service => service.ApplyFilters(It.IsAny<GameDTO[]>(), It.IsAny<FilterCriteria>()), Times.Once);
     }
 
     [Fact]
-    public void ApplyFilters_InvalidDateRange_RaisesErrorAndSkipsSearch()
+    public void ApplyFilters_WithInvalidDateRange_RaisesErrorAndSkipsSearch()
     {
         var (sut, searchService, _, errors) = CreateSut();
-        sut.LoadDiscoveryResutls(new[] { CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2) });
+        sut.LoadDiscoveryResults(new[] { CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2) });
         sut.CurrentFilter.AvailabilityRange = new TimeRange(new DateTime(2026, 1, 1), new DateTime(2026, 1, 2));
         searchService.Setup(service => service.IsValidDateRange(It.IsAny<DateTime?>(), It.IsAny<DateTime?>())).Returns(false);
 
@@ -93,7 +93,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void ApplySelectedUiFilters_ValidValues_UpdatesFilterAndAppliesResults()
+    public void ApplySelectedUiFilters_WithValidValues_UpdatesFilterAndAppliesResults()
     {
         var (sut, searchService, _, errors) = CreateSut();
         var results = new[] { CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2) };
@@ -116,7 +116,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void ApplySelectedUiFilters_InvalidPlayers_RaisesValidationError()
+    public void ApplySelectedUiFilters_WithInvalidPlayers_RaisesValidationError()
     {
         var (sut, searchService, _, errors) = CreateSut();
         searchService.Setup(service => service.IsValidPlayersCount(It.IsAny<int?>())).Returns(false);
@@ -131,7 +131,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void RemoveNameFilter_ClearsNameAndReappliesFilters()
+    public void RemoveNameFilter_WhenCalled_ClearsNameAndReappliesFilters()
     {
         var (sut, searchService, _, errors) = CreateSut();
         sut.CurrentFilter.Name = "Catan";
@@ -144,7 +144,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void RemoveCityFilter_ClearsCityAndReappliesFilters()
+    public void RemoveCityFilter_WhenCalled_ClearsCityAndReappliesFilters()
     {
         var (sut, searchService, _, errors) = CreateSut();
         sut.CurrentFilter.City = "Cluj";
@@ -157,7 +157,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void RemovePriceFilter_ClearsPriceAndReappliesFilters()
+    public void RemovePriceFilter_WhenCalled_ClearsPriceAndReappliesFilters()
     {
         var (sut, searchService, _, errors) = CreateSut();
         sut.CurrentFilter.MaximumPrice = 12m;
@@ -170,7 +170,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void RemovePlayersFilter_ClearsPlayerCountAndReappliesFilters()
+    public void RemovePlayersFilter_WhenCalled_ClearsPlayerCountAndReappliesFilters()
     {
         var (sut, searchService, _, errors) = CreateSut();
         sut.CurrentFilter.PlayerCount = 3;
@@ -183,7 +183,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void RemoveDateFilter_ClearsAvailabilityRangeAndReappliesFilters()
+    public void RemoveDateFilter_WhenCalled_ClearsAvailabilityRangeAndReappliesFilters()
     {
         var (sut, searchService, _, errors) = CreateSut();
         sut.CurrentFilter.AvailabilityRange = new TimeRange(new DateTime(2026, 1, 1), new DateTime(2026, 1, 2));
@@ -196,7 +196,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void SetPriceAscendingSort_SetsSortOptionAndReappliesFilters()
+    public void SetPriceAscendingSort_WhenCalled_SetsSortOptionAndReappliesFilters()
     {
         var (sut, searchService, _, errors) = CreateSut();
 
@@ -208,7 +208,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void SetPriceDescendingSort_SetsSortOptionAndReappliesFilters()
+    public void SetPriceDescendingSort_WhenCalled_SetsSortOptionAndReappliesFilters()
     {
         var (sut, searchService, _, errors) = CreateSut();
 
@@ -220,7 +220,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void ClearSorting_ResetsSortOptionAndReappliesFilters()
+    public void ClearSorting_WhenCalled_ResetsSortOptionAndReappliesFilters()
     {
         var (sut, searchService, _, errors) = CreateSut();
         sut.CurrentFilter.SortOption = SortOption.PriceDescending;
@@ -233,7 +233,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void ClearAllFilters_ResetsSelectionsAndRestoresBaseResults()
+    public void ClearAllFilters_WhenCalled_ResetsSelectionsAndRestoresBaseResults()
     {
         var (sut, _, _, errors) = CreateSut();
         var baseResults = new[]
@@ -241,7 +241,7 @@ public class FilteredSearchViewModelTests
             CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2),
             CreateGameDto(2, "Azul", 15m, "Iasi", 4, 2),
         };
-        sut.LoadDiscoveryResutls(baseResults);
+        sut.LoadDiscoveryResults(baseResults);
         sut.CurrentFilter.Name = "Catan";
         sut.CurrentFilter.City = "Cluj";
         sut.CurrentFilter.AvailabilityRange = new TimeRange(new DateTime(2026, 1, 1), new DateTime(2026, 1, 2));
@@ -271,11 +271,11 @@ public class FilteredSearchViewModelTests
         Assert.Equal(string.Empty, sut.CitySearchText);
         Assert.Equal(string.Empty, sut.LocationError);
         Assert.Equal(baseResults, sut.DisplayedResults);
-        Assert.Equal(baseResults, sut.GamesShown);
+        Assert.Equal(baseResults, sut.VisibleGames);
     }
 
     [Fact]
-    public void ApplySortOnly_ClosestToMeWithoutCity_ShowsLocationError()
+    public void ApplySortOnly_WithClosestToMeWithoutCity_ShowsLocationError()
     {
         var (sut, searchService, _, errors) = CreateSut();
 
@@ -289,7 +289,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void SearchGamesByFilter_ValidSelectedDates_LoadsResults()
+    public void SearchGamesByFilter_WithValidSelectedDates_LoadsResults()
     {
         var (sut, searchService, _, errors) = CreateSut();
         var results = new[] { CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2) };
@@ -306,7 +306,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void SearchGamesByFilter_InvalidSelectedDates_RaisesError()
+    public void SearchGamesByFilter_WithInvalidSelectedDates_RaisesError()
     {
         var (sut, searchService, _, errors) = CreateSut();
         sut.SelectedStartDate = new DateTimeOffset(new DateTime(2026, 1, 2));
@@ -402,7 +402,7 @@ public class FilteredSearchViewModelTests
     }
 
     [Fact]
-    public void ApplyFilters_OnlyAvailableGamesAreShown()
+    public void ApplyFilters_WithAvailableGames_ShowsOnlyAvailableGames()
     {
         var (sut, searchService, _, errors) = CreateSut();
 
@@ -417,7 +417,7 @@ public class FilteredSearchViewModelTests
         baseGames[0]
     };
 
-        sut.LoadDiscoveryResutls(baseGames);
+        sut.LoadDiscoveryResults(baseGames);
 
         searchService.Setup(s => s.ApplyFilters(It.IsAny<GameDTO[]>(), It.IsAny<FilterCriteria>()))
             .Returns(filtered);
@@ -425,12 +425,12 @@ public class FilteredSearchViewModelTests
         sut.ApplyFilters();
 
         Assert.Empty(errors);
-        Assert.Single(sut.GamesShown);
-        Assert.Equal(1, sut.GamesShown.First().GameId);
+        Assert.Single(sut.VisibleGames);
+        Assert.Equal(1, sut.VisibleGames.First().GameId);
     }
 
     [Fact]
-    public void LoadSearchResults_AllowsMultipleListingsForSameGame()
+    public void LoadSearchResults_WithDuplicateGameListings_AllowsMultipleListings()
     {
         var (sut, searchService, _, errors) = CreateSut();
 
@@ -446,7 +446,7 @@ public class FilteredSearchViewModelTests
         sut.LoadSearchResults(new FilterCriteria());
 
         Assert.Empty(errors);
-        Assert.Equal(2, sut.GamesShown.Count);
+        Assert.Equal(2, sut.VisibleGames.Count);
     }
 
     [Fact]
@@ -464,11 +464,11 @@ public class FilteredSearchViewModelTests
         sut.LoadSearchResults(new FilterCriteria());
 
         Assert.Empty(errors);
-        Assert.True(sut.GamesShown.Count <= results.Length);
+        Assert.True(sut.VisibleGames.Count <= results.Length);
     }
 
     [Fact]
-    public void GamesShown_ContainsValidGameIds_ForNavigation()
+    public void GamesShown_WhenNavigating_ContainsValidGameIds()
     {
         var (sut, searchService, _, errors) = CreateSut();
 
@@ -483,11 +483,11 @@ public class FilteredSearchViewModelTests
         sut.LoadSearchResults(new FilterCriteria());
 
         Assert.Empty(errors);
-        Assert.True(sut.GamesShown.First().GameId > 0);
+        Assert.True(sut.VisibleGames.First().GameId > 0);
     }
 
     [Fact]
-    public void LoadSearchResults_DoesNotRequireUserAuthentication()
+    public void LoadSearchResults_WhenCalled_DoesNotRequireUserAuthentication()
     {
         var (sut, searchService, _, errors) = CreateSut();
 
@@ -497,11 +497,11 @@ public class FilteredSearchViewModelTests
         sut.LoadSearchResults(new FilterCriteria());
 
         Assert.Empty(errors);
-        Assert.NotNull(sut.GamesShown);
+        Assert.NotNull(sut.VisibleGames);
     }
 
     [Fact]
-    public void SelectGame_RaisesNavigationEvent()
+    public void SelectGame_WhenCalled_RaisesNavigationEvent()
     {
         var (sut, _, _, errors) = CreateSut();
 
@@ -510,7 +510,7 @@ public class FilteredSearchViewModelTests
 
         var game = CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2);
 
-        sut.GamesShown.Add(game);
+        sut.VisibleGames.Add(game);
 
         sut.SelectGame(game.GameId);
 
@@ -523,7 +523,7 @@ public class FilteredSearchViewModelTests
     {
         var (sut, _, _, _) = CreateSut();
 
-        sut.LoadDiscoveryResutls(Array.Empty<GameDTO>());
+        sut.LoadDiscoveryResults(Array.Empty<GameDTO>());
 
         Assert.True(sut.HasNoResults);
         Assert.NotEmpty(sut.NoResultsMessage);

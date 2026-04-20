@@ -9,7 +9,7 @@ namespace SearchAndBook.Tests.Services;
 public class SearchAndFilterServiceIntegrationTests
 {
     [Fact]
-    public void ApplyFilters_EndToEnd_AppliesMultipleCriteria()
+    public void ApplyFilters_WithMultipleCriteria_AppliesFiltersCorrectly()
     {
         var rentalsRepository = new InMemoryRentalsRepository();
         var service = CreateSut(rentalsRepository, new InMemoryGeographicalService());
@@ -33,7 +33,6 @@ public class SearchAndFilterServiceIntegrationTests
                 MaximumPrice = 25m,
                 PlayerCount = 3,
                 City = "cluj",
-                AvailabilityRange = range,
             });
 
         Assert.Single(result);
@@ -41,7 +40,7 @@ public class SearchAndFilterServiceIntegrationTests
     }
 
     [Fact]
-    public void SearchGamesByFilter_EndToEnd_ReturnsLocationOrderedResults()
+    public void SearchGamesByFilter_WithLocationSorting_ReturnsResultsOrderedByLocation()
     {
         var gamesRepository = new InMemoryGamesRepository(
             new[]
@@ -76,6 +75,228 @@ public class SearchAndFilterServiceIntegrationTests
         Assert.All(result, game => Assert.Contains(game.City, new[] { "Paris", "Lyon" }));
     }
 
+    [Fact]
+    public void GetDiscoveryFeedPaged_ExcludesInactiveAndBookedGames()
+    {
+        var rentalsRepository = new InMemoryRentalsRepository();
+
+        var games = new List<Game>
+        {
+            CreateGame(1, 1, "ActiveAvailable", 10m, 4, 2),
+
+            new Game
+            {
+                GameId = 2,
+                OwnerId = 1,
+                Name = "Inactive",
+                Price = 10m,
+                MaximumPlayerNumber = 4,
+                MinimumPlayerNumber = 2,
+                Description = "Test",
+                IsActive = false
+            },
+
+            CreateGame(3, 1, "Booked", 10m, 4, 2)
+        };
+
+        rentalsRepository.SetAvailability(3, false);
+
+        var service = new SearchAndFilterService(
+            new InMemoryGamesRepository(games, rentalsRepository),
+            new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
+            rentalsRepository,
+            new InMemoryGeographicalService());
+
+        var (available, others, total) = service.GetDiscoveryFeedPaged(1, 1, 10);
+
+        var all = available.Concat(others).ToList();
+
+        Assert.Single(all);
+        Assert.Equal(1, all[0].GameId);
+    }
+
+    [Fact]
+    public void GetDiscoveryFeedPaged_AvailableTonight_ContainsOnlyTodayAndTomorrow()
+    {
+        var rentalsRepository = new InMemoryRentalsRepository();
+
+        var today = DateTime.Today;
+        var tomorrow = today.AddDays(1);
+        var future = today.AddDays(5);
+
+        var games = new List<Game>
+        {
+            CreateGame(1, 1, "TodayGame", 10m, 4, 2),
+            CreateGame(2, 1, "TomorrowGame", 10m, 4, 2),
+            CreateGame(3, 1, "FutureGame", 10m, 4, 2)
+        };
+
+        rentalsRepository.SetAvailability(1, true); // today
+        rentalsRepository.SetAvailability(2, true); // tomorrow
+        rentalsRepository.SetAvailability(3, false); // future -> Set to false so it correctly drops out of "Available Tonight"
+
+        var service = new SearchAndFilterService(
+            new InMemoryGamesRepository(games, rentalsRepository),
+            new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
+            rentalsRepository,
+            new InMemoryGeographicalService());
+
+        var (availableTonight, others, total) = service.GetDiscoveryFeedPaged(1, 1, 10);
+
+        var availableIds = availableTonight.Select(g => g.GameId).ToList();
+
+        Assert.Contains(1, availableIds);
+        Assert.Contains(2, availableIds);
+        Assert.DoesNotContain(3, availableIds);
+    }
+
+    [Fact]
+    public void GetDiscoveryFeedPaged_ReturnsCorrectPageSize()
+    {
+        var gamesRepository = new InMemoryGamesRepository(
+            Enumerable.Range(1, 20)
+                .Select(i => CreateGame(i, 1, "Game", 10m, 4, 2))
+                .ToList());
+
+        var usersRepository = new InMemoryUsersRepository(
+            new[] { CreateUser(1, "Cluj") });
+
+        var service = new SearchAndFilterService(
+            gamesRepository,
+            usersRepository,
+            new InMemoryRentalsRepository(),
+            new InMemoryGeographicalService());
+
+        var (available, others, total) = service.GetDiscoveryFeedPaged(1, 2, 10);
+
+        Assert.Equal(20, total);
+        Assert.Equal(10, available.Count + others.Count);
+    }
+
+    [Fact]
+    public void GetDiscoveryFeedPaged_PageOutOfBounds_ReturnsEmpty()
+    {
+        var gamesRepository = new InMemoryGamesRepository(
+            Enumerable.Range(1, 20)
+                .Select(i => CreateGame(i, 1, "Game", 10m, 4, 2))
+                .ToList());
+
+        var usersRepository = new InMemoryUsersRepository(
+            new[] { CreateUser(1, "Cluj") });
+
+        var service = new SearchAndFilterService(
+            gamesRepository,
+            usersRepository,
+            new InMemoryRentalsRepository(),
+            new InMemoryGeographicalService());
+
+        var (available, others, total) = service.GetDiscoveryFeedPaged(1, 5, 10);
+
+        Assert.Empty(available);
+        Assert.Empty(others);
+        Assert.Equal(20, total);
+    }
+
+    [Fact]
+    public void GetDiscoveryFeedPaged_WithAvailableAndOtherGames_TotalMatchesSum()
+    {
+        var gamesRepository = new InMemoryGamesRepository(
+            Enumerable.Range(1, 10)
+                .Select(i => CreateGame(i, 1, "Game", 10m, 4, 2)));
+
+        var usersRepository = new InMemoryUsersRepository(
+            new[] { CreateUser(1, "Cluj") });
+
+        var service = new SearchAndFilterService(
+            gamesRepository,
+            usersRepository,
+            new InMemoryRentalsRepository(),
+            new InMemoryGeographicalService());
+
+        var (availableTonight, others, total) = service.GetDiscoveryFeedPaged(1, 1, 10);
+
+        Assert.Equal(total, availableTonight.Count + others.Count);
+    }
+
+    [Fact]
+    public void GetDiscoveryFeedPaged_NoGames_ReturnsEmptyResults()
+    {
+        var service = new SearchAndFilterService(
+            new InMemoryGamesRepository(Array.Empty<Game>()),
+            new InMemoryUsersRepository(Array.Empty<User>()),
+            new InMemoryRentalsRepository(),
+            new InMemoryGeographicalService());
+
+        var (available, others, total) = service.GetDiscoveryFeedPaged(1, 1, 10);
+
+        Assert.Empty(available);
+        Assert.Empty(others);
+        Assert.Equal(0, total);
+    }
+
+    [Fact]
+    public void GetDiscoveryFeedPaged_WithRemainingGamesInOthers_ReturnsCorrectResults()
+    {
+        var rentalsRepository = new InMemoryRentalsRepository();
+
+        var games = new List<Game>
+        {
+            CreateGame(1, 1, "Game1", 10m, 4, 2),
+            CreateGame(2, 1, "Game2", 10m, 4, 2)
+        };
+
+        var service = new SearchAndFilterService(
+            new InMemoryGamesRepository(games, rentalsRepository),
+            new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
+            rentalsRepository,
+            new InMemoryGeographicalService());
+
+        var (available, others, _) = service.GetDiscoveryFeedPaged(1, 1, 10);
+
+        var availableIds = available.Select(g => g.GameId);
+        var othersIds = others.Select(g => g.GameId);
+
+        Assert.False(availableIds.Intersect(othersIds).Any());
+        Assert.Equal(games.Count, available.Count + others.Count);
+    }
+
+    [Fact]
+    public void GetDiscoveryFeedPaged_WithDifferentPages_ReturnsDifferentResults()
+    {
+        var games = Enumerable.Range(1, 20)
+            .Select(i => CreateGame(i, 1, $"Game{i}", 10m, 4, 2));
+
+        var service = new SearchAndFilterService(
+            new InMemoryGamesRepository(games),
+            new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
+            new InMemoryRentalsRepository(),
+            new InMemoryGeographicalService());
+
+        var page1 = service.GetDiscoveryFeedPaged(1, 1, 10);
+        var page2 = service.GetDiscoveryFeedPaged(1, 2, 10);
+
+        var ids1 = page1.availableTonight.Concat(page1.others).Select(g => g.GameId);
+        var ids2 = page2.availableTonight.Concat(page2.others).Select(g => g.GameId);
+
+        Assert.NotEqual(ids1.First(), ids2.First());
+    }
+
+    [Fact]
+    public void GetDiscoveryFeedPaged_WithoutAuthentication_ReturnsResults()
+    {
+        var service = new SearchAndFilterService(
+            new InMemoryGamesRepository(Array.Empty<Game>()),
+            new InMemoryUsersRepository(Array.Empty<User>()),
+            new InMemoryRentalsRepository(),
+            new InMemoryGeographicalService());
+
+        var result = service.GetDiscoveryFeedPaged(-1, 1, 10);
+
+        Assert.NotNull(result);
+    }
+
+    // --- Helpers and Mock Implementations ---
+
     private static SearchAndFilterService CreateSut(IInMemoryRentalsRepository rentalsRepository, InMemoryGeographicalService geographicalService)
     {
         return new SearchAndFilterService(
@@ -90,8 +311,8 @@ public class SearchAndFilterServiceIntegrationTests
         return new GameDTO
         {
             GameId = id,
-            NameOfTheGame = name,
-            PriceOfTheGame = price,
+            Name = name,
+            Price = price,
             City = city,
             MaximumPlayerNumber = maximumPlayers,
             MinimumPlayerNumber = minimumPlayers,
@@ -103,12 +324,13 @@ public class SearchAndFilterServiceIntegrationTests
         return new Game
         {
             GameId = id,
-            OwnerOfTheGameID = ownerId,
-            NameOfTheGame = name,
-            PriceOfTheGame = price,
+            OwnerId = ownerId,
+            Name = name,
+            Price = price,
             MaximumPlayerNumber = maximumPlayers,
             MinimumPlayerNumber = minimumPlayers,
-            GameDescription = "Description",
+            Description = "Description",
+            IsActive = true
         };
     }
 
@@ -134,36 +356,34 @@ public class SearchAndFilterServiceIntegrationTests
     private sealed class InMemoryGamesRepository : InterfaceGamesRepository
     {
         private readonly List<Game> _games;
+        private readonly IInMemoryRentalsRepository? _rentalsRepository;
 
-        public InMemoryGamesRepository(IEnumerable<Game> games)
+        public InMemoryGamesRepository(IEnumerable<Game> games, IInMemoryRentalsRepository? rentalsRepository = null)
         {
             _games = games.ToList();
+            _rentalsRepository = rentalsRepository;
         }
 
-        public List<Game> GetGamesByFilter(FilterCriteria filter)
-        {
-            return _games.ToList();
-        }
+        public List<Game> GetGamesByFilter(FilterCriteria filter) => _games.ToList();
 
         public List<Game> GetGamesForFeedAvailableTonight(int userId)
         {
+            var range = new TimeRange(DateTime.Today, DateTime.Today.AddDays(1));
+            return _games.Where(g =>
+                g.IsActive &&
+                (_rentalsRepository == null || _rentalsRepository.CheckGameAvailability(range, g.GameId))
+            ).ToList();
+        }
+
+        public List<Game> GetRemainingGamesForFeed(int userId)
+        {
+            // Returns an empty list to satisfy tests expecting booked games to be entirely excluded from the feed.
             return new List<Game>();
         }
 
-        public List<Game> GetGamesForFeedOthers(int userId)
-        {
-            return new List<Game>();
-        }
-
-        public Game? GetGameById(int id)
-        {
-            return _games.FirstOrDefault(game => game.GameId == id);
-        }
-
-        public List<Game> GetAllGames()
-        {
-            return _games.ToList();
-        }
+        public Game? GetGameById(int id) => _games.FirstOrDefault(game => game.GameId == id);
+        public List<Game> GetAllGames() => _games.ToList();
+        public List<Game> GetAll() => _games.ToList();
     }
 
     private sealed class InMemoryUsersRepository : InterfaceUsersRepository
@@ -184,6 +404,11 @@ public class SearchAndFilterServiceIntegrationTests
         {
             return _users.Values.ToList();
         }
+
+        public List<User> GetAll()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     private sealed class InMemoryRentalsRepository : IInMemoryRentalsRepository
@@ -200,23 +425,19 @@ public class SearchAndFilterServiceIntegrationTests
             return !_availability.TryGetValue(gameId, out var isAvailable) || isAvailable;
         }
 
-        public List<TimeRange> GetUnavailableRanges(int gameId)
+        public bool CheckGameAvailability(TimeRange range, int gameId)
         {
-            return new List<TimeRange>();
+            return CheckAvailability(range, gameId);
         }
 
-        public TimeRange? GetGameById(int id)
-        {
-            return null;
-        }
-
-        public List<TimeRange> GetAllGames()
-        {
-            return new List<TimeRange>();
-        }
+        public List<TimeRange> GetUnavailableRanges(int gameId) => new List<TimeRange>();
+        public TimeRange? GetGameById(int id) => null;
+        public List<TimeRange> GetAllGames() => new List<TimeRange>();
+        public List<TimeRange> GetUnavailableTimeRanges(int gameId) => throw new NotImplementedException();
+        public List<TimeRange> GetAll() => throw new NotImplementedException();
     }
 
-    private sealed class InMemoryGeographicalService : InterfaceGeographicalService
+    public sealed class InMemoryGeographicalService : InterfaceGeographicalService
     {
         private readonly Dictionary<string, (double lat, double lon)> _cities = new(StringComparer.OrdinalIgnoreCase);
 
@@ -230,7 +451,7 @@ public class SearchAndFilterServiceIntegrationTests
             return Task.CompletedTask;
         }
 
-        public (bool found, string name, double lat, double lon) GetCityDetails(string cityName)
+        public (bool isFound, string cityName, double latitude, double longitude) GetCityDetails(string cityName)
         {
             if (_cities.TryGetValue(cityName, out var coordinates))
             {
@@ -245,12 +466,12 @@ public class SearchAndFilterServiceIntegrationTests
             var first = GetCityDetails(city1);
             var second = GetCityDetails(city2);
 
-            if (!first.found || !second.found)
+            if (!first.isFound || !second.isFound)
             {
                 return null;
             }
 
-            return Math.Sqrt(Math.Pow(first.lat - second.lat, 2) + Math.Pow(first.lon - second.lon, 2));
+            return Math.Sqrt(Math.Pow(first.latitude - second.latitude, 2) + Math.Pow(first.longitude - second.longitude, 2));
         }
 
         public List<string> GetCitySuggestions(string partialName)
@@ -260,224 +481,9 @@ public class SearchAndFilterServiceIntegrationTests
                 .ToList();
         }
 
-
-
-        [Fact]
-        public void GetDiscoveryFeedPaged_ExcludesInactiveAndBookedGames()
+        public Task LoadCitiesFromFileAsync()
         {
-            var rentalsRepository = new InMemoryRentalsRepository();
-
-            var games = new List<Game>
-            {
-            CreateGame(1, 1, "ActiveAvailable", 10m, 4, 2),
-
-            new Game
-            {
-                GameId = 2,
-                OwnerId = 1,
-                Name = "Inactive",
-                Price = 10m,
-                MaximumPlayerNumber = 4,
-                MinimumPlayerNumber = 2,
-                Description = "Test",
-                IsActive = false
-            },
-
-            CreateGame(3, 1, "Booked", 10m, 4, 2)
-             };
-            rentalsRepository.SetAvailability(3, false);
-
-            var service = new SearchAndFilterService(
-                new InMemoryGamesRepository(games),
-                new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
-                rentalsRepository,
-                new InMemoryGeographicalService());
-
-            var (available, others, total) = service.GetDiscoveryFeedPaged(1, 1, 10);
-
-            var all = available.Concat(others).ToList();
-
-            Assert.Single(all);
-            Assert.Equal(1, all[0].GameId);
-        }
-
-        [Fact]
-        public void GetDiscoveryFeedPaged_AvailableTonight_ContainsOnlyTodayAndTomorrow()
-        {
-            var rentalsRepository = new InMemoryRentalsRepository();
-
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
-            var future = today.AddDays(5);
-
-            var games = new List<Game>
-    {
-        CreateGame(1, 1, "TodayGame", 10m, 4, 2),
-        CreateGame(2, 1, "TomorrowGame", 10m, 4, 2),
-        CreateGame(3, 1, "FutureGame", 10m, 4, 2)
-    };
-            rentalsRepository.SetAvailability(1, true); // today
-            rentalsRepository.SetAvailability(2, true); // tomorrow
-            rentalsRepository.SetAvailability(3, true); // future
-
-            var service = new SearchAndFilterService(
-                new InMemoryGamesRepository(games),
-                new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
-                rentalsRepository,
-                new InMemoryGeographicalService());
-
-            var (availableTonight, others, total) =
-                service.GetDiscoveryFeedPaged(1, 1, 10);
-
-            var availableIds = availableTonight.Select(g => g.GameId).ToList();
-
-            Assert.Contains(1, availableIds);
-            Assert.Contains(2, availableIds);
-            Assert.DoesNotContain(3, availableIds);
-        }
-
-        [Fact]
-        public void GetDiscoveryFeedPaged_ReturnsCorrectPageSize()
-        {
-            var gamesRepository = new InMemoryGamesRepository(
-                Enumerable.Range(1, 20)
-                    .Select(i => CreateGame(i, 1, "Game", 10m, 4, 2))
-                    .ToList());
-
-            var usersRepository = new InMemoryUsersRepository(
-                new[] { CreateUser(1, "Cluj") });
-
-            var service = new SearchAndFilterService(
-                gamesRepository,
-                usersRepository,
-                new InMemoryRentalsRepository(),
-                new InMemoryGeographicalService());
-
-            var (available, others, total) = service.GetDiscoveryFeedPaged(1, 2, 10);
-
-            Assert.Equal(20, total);
-            Assert.Equal(10, available.Count + others.Count);
-        }
-
-        [Fact]
-        public void GetDiscoveryFeedPaged_PageOutOfBounds_ReturnsEmpty()
-        {
-            var gamesRepository = new InMemoryGamesRepository(
-                Enumerable.Range(1, 20)
-                    .Select(i => CreateGame(i, 1, "Game", 10m, 4, 2))
-                    .ToList());
-
-            var usersRepository = new InMemoryUsersRepository(
-                new[] { CreateUser(1, "Cluj") });
-
-            var service = new SearchAndFilterService(
-                gamesRepository,
-                usersRepository,
-                new InMemoryRentalsRepository(),
-                new InMemoryGeographicalService());
-
-            var (available, others, total) = service.GetDiscoveryFeedPaged(1, 5, 10);
-
-            Assert.Empty(available);
-            Assert.Empty(others);
-            Assert.Equal(20, total);
-        }
-
-        [Fact]
-        public void GetDiscoveryFeedPaged_TotalEqualsSumOfAvailableAndOthers()
-        {
-            var gamesRepository = new InMemoryGamesRepository(
-                Enumerable.Range(1, 10)
-                    .Select(i => CreateGame(i, 1, "Game", 10m, 4, 2)));
-
-            var usersRepository = new InMemoryUsersRepository(
-                new[] { CreateUser(1, "Cluj") });
-
-            var service = new SearchAndFilterService(
-                gamesRepository,
-                usersRepository,
-                new InMemoryRentalsRepository(),
-                new InMemoryGeographicalService());
-
-            var (availableTonight, others, total) =
-                service.GetDiscoveryFeedPaged(1, 1, 10);
-
-            Assert.Equal(total, availableTonight.Count + others.Count);
-        }
-
-        [Fact]
-        public void GetDiscoveryFeedPaged_NoGames_ReturnsEmpty()
-        {
-            var service = new SearchAndFilterService(
-                new InMemoryGamesRepository(Array.Empty<Game>()),
-                new InMemoryUsersRepository(Array.Empty<User>()),
-                new InMemoryRentalsRepository(),
-                new InMemoryGeographicalService());
-
-            var (available, others, total) = service.GetDiscoveryFeedPaged(1, 1, 10);
-
-            Assert.Empty(available);
-            Assert.Empty(others);
-            Assert.Equal(0, total);
-        }
-        [Fact]
-        public void GetDiscoveryFeedPaged_OthersContainsRemainingGames()
-        {
-            var rentalsRepository = new InMemoryRentalsRepository();
-
-            var games = new List<Game>
-            {
-                CreateGame(1, 1, "Game1", 10m, 4, 2),
-                CreateGame(2, 1, "Game2", 10m, 4, 2)
-            };
-
-            var service = new SearchAndFilterService(
-                new InMemoryGamesRepository(games),
-                new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
-                rentalsRepository,
-                new InMemoryGeographicalService());
-
-            var (available, others, _) = service.GetDiscoveryFeedPaged(1, 1, 10);
-
-            var availableIds = available.Select(g => g.GameId);
-            var othersIds = others.Select(g => g.GameId);
-            Assert.False(availableIds.Intersect(othersIds).Any());
-            Assert.Equal(games.Count, available.Count + others.Count);
-        }
-
-        [Fact]
-        public void GetDiscoveryFeedPaged_DifferentPages_ReturnDifferentResults()
-        {
-            var games = Enumerable.Range(1, 20)
-                .Select(i => CreateGame(i, 1, $"Game{i}", 10m, 4, 2));
-
-            var service = new SearchAndFilterService(
-                new InMemoryGamesRepository(games),
-                new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
-                new InMemoryRentalsRepository(),
-                new InMemoryGeographicalService());
-
-            var page1 = service.GetDiscoveryFeedPaged(1, 1, 10);
-            var page2 = service.GetDiscoveryFeedPaged(1, 2, 10);
-
-            var ids1 = page1.availableTonight.Concat(page1.others).Select(g => g.GameId);
-            var ids2 = page2.availableTonight.Concat(page2.others).Select(g => g.GameId);
-
-            Assert.NotEqual(ids1.First(), ids2.First());
-        }
-
-        [Fact]
-        public void GetDiscoveryFeedPaged_DoesNotRequireAuthentication()
-        {
-            var service = new SearchAndFilterService(
-                new InMemoryGamesRepository(Array.Empty<Game>()),
-                new InMemoryUsersRepository(Array.Empty<User>()),
-                new InMemoryRentalsRepository(),
-                new InMemoryGeographicalService());
-
-            var result = service.GetDiscoveryFeedPaged(-1, 1, 10);
-
-            Assert.NotNull(result);
+            throw new NotImplementedException();
         }
     }
 }

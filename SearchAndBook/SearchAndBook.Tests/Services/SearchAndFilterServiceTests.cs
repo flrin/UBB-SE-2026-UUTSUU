@@ -9,7 +9,7 @@ namespace SearchAndBook.Tests.Services;
 public class SearchAndFilterServiceTests
 {
     [Fact]
-    public void ApplyFilters_NameFilter_ReturnsCaseInsensitiveMatches()
+    public void ApplyFilters_WhenNameFilterIsProvided_ReturnsCaseInsensitiveMatches()
     {
         var sut = CreateSut(out _, out _, out _, out _);
         var games = new[]
@@ -25,7 +25,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_MaximumPriceFilter_ReturnsGamesWithinBudget()
+    public void ApplyFilters_WhenMaximumPriceFilterIsProvided_ReturnsGamesWithinBudget()
     {
         var sut = CreateSut(out _, out _, out _, out _);
         var games = new[]
@@ -41,7 +41,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_PlayerCountFilter_ReturnsGamesWithEnoughPlayers()
+    public void ApplyFilters_WhenPlayerCountFilterIsProvided_ReturnsGamesWithEnoughPlayers()
     {
         var sut = CreateSut(out _, out _, out _, out _);
         var games = new[]
@@ -57,7 +57,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_CityFilter_ReturnsGamesFromMatchingCity()
+    public void ApplyFilters_WhenCityFilterIsProvided_ReturnsGamesFromMatchingCity()
     {
         var sut = CreateSut(out _, out _, out _, out _);
         var games = new[]
@@ -73,7 +73,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_PriceAscendingSort_ReturnsCheapestFirst()
+    public void ApplyFilters_WhenPriceAscendingSortIsProvided_ReturnsCheapestFirst()
     {
         var sut = CreateSut(out _, out _, out _, out _);
         var games = new[]
@@ -89,7 +89,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_PriceDescendingSort_ReturnsMostExpensiveFirst()
+    public void ApplyFilters_WhenPriceDescendingSortIsProvided_ReturnsMostExpensiveFirst()
     {
         var sut = CreateSut(out _, out _, out _, out _);
         var games = new[]
@@ -105,7 +105,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_LocationSort_OrdersByDistanceAndCachesCityLookups()
+    public void ApplyFilters_WhenLocationSortIsProvided_OrdersByDistanceAndCachesCityLookups()
     {
         var sut = CreateSut(out _, out _, out _, out var geoService);
         var games = new[]
@@ -130,7 +130,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_LocationSortWithUnknownCity_KeepsOriginalOrder()
+    public void ApplyFilters_WhenLocationSortIsProvidedWithUnknownCity_KeepsOriginalOrder()
     {
         var sut = CreateSut(out _, out _, out _, out var geoService);
         var games = new[]
@@ -152,7 +152,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_AvailabilityRangeFilter_UsesRentalsRepository()
+    public void ApplyFilters_WhenAvailabilityRangeFilterIsProvided_UsesRentalsRepository()
     {
         var sut = CreateSut(out _, out _, out var rentalsRepository, out _);
         var games = new[]
@@ -162,8 +162,8 @@ public class SearchAndFilterServiceTests
         };
         var range = new TimeRange(new DateTime(2026, 1, 1), new DateTime(2026, 1, 2));
 
-        rentalsRepository.Setup(repository => repository.CheckAvailability(range, 1)).Returns(true);
-        rentalsRepository.Setup(repository => repository.CheckAvailability(range, 2)).Returns(false);
+        rentalsRepository.Setup(repository => repository.CheckGameAvailability(range, 1)).Returns(true);
+        rentalsRepository.Setup(repository => repository.CheckGameAvailability(range, 2)).Returns(false);
 
         var result = sut.ApplyFilters(games, new FilterCriteria { AvailabilityRange = range });
 
@@ -172,7 +172,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void SearchGamesByFilter_LocationSort_ClearsCityForRepositoryAndRestoresItAfterwards()
+    public void SearchGamesByFilter_WhenLocationSortIsProvided_ClearsCityForRepositoryAndRestoresItAfterwards()
     {
         var sut = CreateSut(out var gamesRepository, out var usersRepository, out _, out var geoService);
         var filter = new FilterCriteria { City = "Brussels", SortOption = SortOption.Location };
@@ -213,7 +213,7 @@ public class SearchAndFilterServiceTests
 
     [Theory]
     [MemberData(nameof(DateRangeData))]
-    public void IsValidDateRange_ReturnsExpectedResult(DateTime? start, DateTime? end, bool expected)
+    public void IsValidDateRange_WhenCalled_ReturnsExpectedResult(DateTime? start, DateTime? end, bool expected)
     {
         var sut = CreateSut(out _, out _, out _, out _);
 
@@ -233,7 +233,7 @@ public class SearchAndFilterServiceTests
 
     [Theory]
     [MemberData(nameof(PlayerCountData))]
-    public void IsValidPlayersCount_ReturnsExpectedResult(int? players, bool expected)
+    public void IsValidPlayersCount_WhenCalled_ReturnsExpectedResult(int? players, bool expected)
     {
         var sut = CreateSut(out _, out _, out _, out _);
 
@@ -251,7 +251,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void UpdateFilterFromUI_ValidInput_PopulatesFilterValues()
+    public void UpdateFilterFromUI_WhenValidInputIsProvided_PopulatesFilterValues()
     {
         var sut = CreateSut(out _, out _, out _, out _);
         var filter = new FilterCriteria();
@@ -268,7 +268,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void UpdateFilterFromUI_InvalidDateRange_ClearsAvailabilityRange()
+    public void UpdateFilterFromUI_WhenInvalidDateRangeIsProvided_ClearsAvailabilityRange()
     {
         var sut = CreateSut(out _, out _, out _, out _);
         var filter = new FilterCriteria();
@@ -296,7 +296,7 @@ public class SearchAndFilterServiceTests
             .Returns((false, string.Empty, 0, 0));
 
         rentalsRepository
-            .Setup(repository => repository.CheckAvailability(It.IsAny<TimeRange>(), It.IsAny<int>()))
+            .Setup(repository => repository.CheckGameAvailability(It.IsAny<TimeRange>(), It.IsAny<int>()))
             .Returns(true);
 
         usersRepository
@@ -352,7 +352,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_NoResults_ReturnsEmpty()
+    public void ApplyFilters_WhenNoResultsMatch_ReturnsEmpty()
     {
         var sut = CreateSut(out _, out _, out _, out _);
 
@@ -367,7 +367,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_AllowsMultipleListingsForSameGame()
+    public void ApplyFilters_WhenMultipleListingsExistForSameGame_AllowsMultipleListings()
     {
         var sut = CreateSut(out _, out _, out _, out _);
 
@@ -383,7 +383,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_PartialMatch_ReturnsMatchingGames()
+    public void ApplyFilters_WhenPartialMatchIsProvided_ReturnsMatchingGames()
     {
         var sut = CreateSut(out _, out _, out _, out _);
 
@@ -400,7 +400,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_AllCriteriaMustMatch()
+    public void ApplyFilters_WhenAllCriteriaMustMatch_ReturnsMatchingGames()
     {
         var sut = CreateSut(out _, out _, out _, out _);
 
@@ -421,14 +421,14 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void ApplyFilters_ReturnsOnlyAvailableGames()
+    public void ApplyFilters_WhenAvailabilityRangeIsProvided_ReturnsOnlyAvailableGames()
     {
         var sut = CreateSut(out _, out _, out var rentalsRepo, out _);
 
         var range = new TimeRange(DateTime.Now, DateTime.Now.AddDays(1));
 
-        rentalsRepo.Setup(r => r.CheckAvailability(range, 1)).Returns(true);
-        rentalsRepo.Setup(r => r.CheckAvailability(range, 2)).Returns(false);
+        rentalsRepo.Setup(r => r.CheckGameAvailability(range, 1)).Returns(true);
+        rentalsRepo.Setup(r => r.CheckGameAvailability(range, 2)).Returns(false);
 
         var games = new[]
         {
@@ -443,7 +443,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void SearchGamesByFilter_ResultContainsGameId()
+    public void SearchGamesByFilter_WhenCalled_ResultContainsGameId()
     {
         var sut = CreateSut(out var gamesRepo, out var usersRepo, out _, out _);
 
@@ -458,7 +458,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void SearchGamesByFilter_DoesNotRequireAuthentication()
+    public void SearchGamesByFilter_WhenCalled_DoesNotRequireAuthentication()
     {
         var sut = CreateSut(out var gamesRepo, out _, out _, out _);
 
@@ -471,7 +471,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void SearchGamesByFilter_Called_ReturnsResults()
+    public void SearchGamesByFilter_WhenCalled_ReturnsResults()
     {
         var sut = CreateSut(out var gamesRepo, out var usersRepo, out _, out _);
 
@@ -486,7 +486,7 @@ public class SearchAndFilterServiceTests
     }
 
     [Fact]
-    public void SearchGamesByFilter_ResultContainsRequiredFields()
+    public void SearchGamesByFilter_WhenCalled_ResultContainsRequiredFields()
     {
         var sut = CreateSut(out var gamesRepo, out var usersRepo, out _, out _);
 
@@ -502,13 +502,9 @@ public class SearchAndFilterServiceTests
 
         var game = result.First();
 
-        Assert.NotNull(game.NameOfTheGame);
-        Assert.True(game.PriceOfTheGame > 0);
+        Assert.NotNull(game.Name);
+        Assert.True(game.Price > 0);
         Assert.NotNull(game.City);
         Assert.True(game.MaximumPlayerNumber > 0);
     }
-
-
-
-
 }
