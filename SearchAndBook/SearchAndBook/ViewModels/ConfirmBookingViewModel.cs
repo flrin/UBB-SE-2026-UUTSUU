@@ -17,6 +17,8 @@ namespace SearchAndBook.ViewModels
         public event Action<string>? OnErrorOccurred;
 
         private const long START_OF_STREAM_POSTION = 0;
+        private const int MinimumBookingDayCount = 1;
+        private const decimal DefaultTotalPrice = 0;
 
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -112,7 +114,7 @@ namespace SearchAndBook.ViewModels
             {
                 RaiseError($"Could not initialize booking confirmation. {exception.Message}");
                 UnavailableTimeRanges = Array.Empty<TimeRange>();
-                TotalPrice = 0;
+                TotalPrice = DefaultTotalPrice;
             }
         }
 
@@ -158,13 +160,13 @@ namespace SearchAndBook.ViewModels
                 try
                 {
                     if (SelectedTimeRange == null)
-                        return 1;
+                        return MinimumBookingDayCount;
 
                     return BookingService.CalculateNumberOfDaysInAGivenTimeRange(SelectedTimeRange);
                 }
                 catch
                 {
-                    return 1;
+                    return MinimumBookingDayCount;
                 }
             }
         }
@@ -218,8 +220,8 @@ namespace SearchAndBook.ViewModels
             catch (Exception exception)
             {
                 RaiseError($"Could not calculate price. {exception.Message}");
-                TotalPrice = 0;
-                return 0;
+                TotalPrice = DefaultTotalPrice;
+                return DefaultTotalPrice;
             }
         }
 

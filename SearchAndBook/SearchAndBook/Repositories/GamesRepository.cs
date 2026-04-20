@@ -122,7 +122,7 @@ public class GamesRepository : InterfaceGamesRepository
             command.Parameters.AddWithValue("@PlayerCount", filter.PlayerCount.HasValue ? filter.PlayerCount.Value : DBNull.Value);
             command.Parameters.AddWithValue("@RequestedStartDate",filter.AvailabilityRange != null ? filter.AvailabilityRange.StartTime : DBNull.Value);
             command.Parameters.AddWithValue("@RequestedEndDate",filter.AvailabilityRange != null ? filter.AvailabilityRange.EndTime : DBNull.Value);
-            command.Parameters.AddWithValue("@UserId", filter.UserId.HasValue ? filter.UserId.Value : -1);
+            command.Parameters.AddWithValue("@UserId", filter.UserId.HasValue ? filter.UserId.Value : AnonymousUserId);
 
             using var reader = command.ExecuteReader();
 

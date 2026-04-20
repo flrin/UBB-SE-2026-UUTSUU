@@ -18,6 +18,9 @@
         private readonly InterfaceRentalsRepository rentalsRepository;
         private readonly InterfaceGeographicalService geographicalService;
 
+        private const int MinimumAllowedPlayers = 0;
+        private const double MinimumFilterValue = 0;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SearchAndFilterService"/> class.
         /// Initializes a new instance.
@@ -330,7 +333,7 @@
                 return true;
             }
 
-            return playersNumber.Value >= 0;
+            return playersNumber.Value >= MinimumAllowedPlayers;
         }
 
         /// <summary>
@@ -344,12 +347,12 @@
         public void UpdateFilterFromUI(FilterCriteria targetFilter, double selectedMaximumPrice, double selectedMinimumPlayerCount, DateTime? selectedStartDate, DateTime? selectedEndDate)
         {
 			// price
-			targetFilter.MaximumPrice = selectedMaximumPrice > 0
+			targetFilter.MaximumPrice = selectedMaximumPrice > MinimumFilterValue
                 ? (decimal?)selectedMaximumPrice
 				: null;
 
 			// players
-			targetFilter.PlayerCount = selectedMinimumPlayerCount > 0
+			targetFilter.PlayerCount = selectedMinimumPlayerCount > MinimumFilterValue
                 ? (int?)selectedMinimumPlayerCount
                 : null;
 
