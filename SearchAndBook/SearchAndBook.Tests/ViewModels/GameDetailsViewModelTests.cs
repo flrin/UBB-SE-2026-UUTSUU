@@ -9,7 +9,7 @@ namespace SearchAndBook.Tests.ViewModels;
 public class GameDetailsViewModelTests
 {
     [Fact]
-    public void Constructor_WhenServiceReturnsData_SetsPropertiesCorrectly()
+    public void Constructor_ServiceReturnsData_SetsPropertiesCorrectly()
     {
         var (sut, _, messages) = CreateSut();
 
@@ -20,10 +20,10 @@ public class GameDetailsViewModelTests
     }
 
     [Fact]
-    public void Constructor_WhenServiceThrows_SetsErrorAndRaisesMessage()
+    public void Constructor_ServiceThrowsException_SetsErrorAndRaisesMessage()
     {
         var bookingService = new Mock<InterfaceBookingService>();
-        bookingService.Setup(s => s.GetGameDetails(It.IsAny<int>()))
+        bookingService.Setup(s => s.GetBookingInformationForSpecificGame(It.IsAny<int>()))
             .Throws(new Exception("boom"));
 
         var messages = new List<string>();
@@ -35,50 +35,50 @@ public class GameDetailsViewModelTests
     }
 
     [Fact]
-    public void CheckAvailability_WhenRangeIsNull_ReturnsFalse()
+    public void CheckGameAvailability_RangeIsNull_ReturnsFalse()
     {
         var (sut, _, _) = CreateSut();
 
-        var result = sut.CheckAvailability(null!);
+        var result = sut.CheckGameAvailability(null!);
 
         Assert.False(result);
     }
 
     [Fact]
-    public void CheckAvailability_WhenServiceReturnsTrue_ReturnsTrue()
+    public void CheckGameAvailability_ServiceReturnsTrue_ReturnsTrue()
     {
         var (sut, bookingService, _) = CreateSut();
 
         var range = CreateRange();
-        bookingService.Setup(s => s.CheckAvailability(It.IsAny<int>(), range)).Returns(true);
+        bookingService.Setup(s => s.CheckGameAvailability(It.IsAny<int>(), range)).Returns(true);
 
-        var result = sut.CheckAvailability(range);
+        var result = sut.CheckGameAvailability(range);
 
         Assert.True(result);
     }
 
     [Fact]
-    public void CheckAvailability_WhenServiceThrows_ReturnsFalseAndRaisesMessage()
+    public void CheckGameAvailability_ServiceThrowsException_ReturnsFalseAndRaisesMessage()
     {
         var (sut, bookingService, messages) = CreateSut();
 
         var range = CreateRange();
-        bookingService.Setup(s => s.CheckAvailability(It.IsAny<int>(), range))
+        bookingService.Setup(s => s.CheckGameAvailability(It.IsAny<int>(), range))
             .Throws(new Exception("boom"));
 
-        var result = sut.CheckAvailability(range);
+        var result = sut.CheckGameAvailability(range);
 
         Assert.False(result);
         Assert.Single(messages);
     }
 
     [Fact]
-    public void CalculatePrice_WhenValidRange_ReturnsCorrectTotal()
+    public void CalculatePrice_ValidRange_ReturnsCorrectTotal()
     {
         var (sut, bookingService, _) = CreateSut();
 
         var range = CreateRange();
-        bookingService.Setup(s => s.CalculateTotalPrice(It.IsAny<decimal>(), range))
+        bookingService.Setup(s => s.CalculateTotalPriceForRentingASpecificGame(It.IsAny<decimal>(), range))
             .Returns(100);
 
         var result = sut.CalculatePrice(range);
@@ -88,7 +88,7 @@ public class GameDetailsViewModelTests
     }
 
     [Fact]
-    public void CalculatePrice_WhenNullRange_ReturnsZeroAndRaisesMessage()
+    public void CalculatePrice_RangeIsNull_ReturnsZeroAndRaisesMessage()
     {
         var (sut, _, messages) = CreateSut();
 
@@ -100,12 +100,12 @@ public class GameDetailsViewModelTests
     }
 
     [Fact]
-    public void CalculatePrice_WhenServiceThrows_ReturnsZeroAndRaisesMessage()
+    public void CalculatePrice_ServiceThrowsException_ReturnsZeroAndRaisesMessage()
     {
         var (sut, bookingService, messages) = CreateSut();
 
         var range = CreateRange();
-        bookingService.Setup(s => s.CalculateTotalPrice(It.IsAny<decimal>(), range))
+        bookingService.Setup(s => s.CalculateTotalPriceForRentingASpecificGame(It.IsAny<decimal>(), range))
             .Throws(new Exception("boom"));
 
         var result = sut.CalculatePrice(range);
@@ -116,7 +116,7 @@ public class GameDetailsViewModelTests
     }
 
     [Fact]
-    public void StartBooking_WhenUserNotLoggedIn_RaisesMessage()
+    public void StartBooking_UserNotLoggedIn_RaisesMessage()
     {
         var (sut, _, messages) = CreateSut();
 
@@ -129,7 +129,7 @@ public class GameDetailsViewModelTests
     }
 
     [Fact]
-    public void StartBooking_WhenRangeIsNull_RaisesMessage()
+    public void StartBooking_RangeIsNull_RaisesMessage()
     {
         var (sut, _, messages) = CreateSut();
 
@@ -141,7 +141,7 @@ public class GameDetailsViewModelTests
     }
 
     [Fact]
-    public void StartBooking_WhenValid_RaisesStartBookingEvent()
+    public void StartBooking_ValidRange_RaisesStartBookingEvent()
     {
         var (sut, _, _) = CreateSut();
 
@@ -164,7 +164,7 @@ public class GameDetailsViewModelTests
     }
 
     [Fact]
-    public void GoBack_RaisesEvent()
+    public void GoBack_Invoked_RaisesEvent()
     {
         var (sut, _, _) = CreateSut();
 
@@ -209,10 +209,10 @@ public class GameDetailsViewModelTests
     {
         var bookingService = new Mock<InterfaceBookingService>(MockBehavior.Loose);
 
-        bookingService.Setup(s => s.GetGameDetails(It.IsAny<int>()))
+        bookingService.Setup(s => s.GetBookingInformationForSpecificGame(It.IsAny<int>()))
             .Returns(CreateDto());
 
-        bookingService.Setup(s => s.GetUnavailableRanges(It.IsAny<int>()))
+        bookingService.Setup(s => s.GetUnavailableTimeRanges(It.IsAny<int>()))
             .Returns(Array.Empty<TimeRange>());
 
         var sut = new GameDetailsViewModel(bookingService.Object, 1);

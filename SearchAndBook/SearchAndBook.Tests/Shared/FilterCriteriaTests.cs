@@ -6,7 +6,7 @@ namespace SearchAndBook.Tests.Shared;
 public class FilterCriteriaTests
 {
     [Fact]
-    public void Reset_ClearsAllFilteringState()
+    public void Reset_WhenCalled_ClearsAllFilteringState()
     {
         var criteria = new FilterCriteria
         {
@@ -31,7 +31,7 @@ public class FilterCriteriaTests
     }
 
     [Fact]
-    public void HasValidAvailabilityRange_ReturnsTrue_WhenRangeIsNull()
+    public void HasValidAvailabilityRange_WhenRangeIsNull_ReturnsTrue()
     {
         var criteria = new FilterCriteria();
 
@@ -41,7 +41,7 @@ public class FilterCriteriaTests
     }
 
     [Fact]
-    public void HasValidAvailabilityRange_ReturnsTrue_WhenRangeIsAscending()
+    public void HasValidAvailabilityRange_WhenRangeIsAscending_ReturnsTrue()
     {
         var criteria = new FilterCriteria
         {
@@ -54,7 +54,7 @@ public class FilterCriteriaTests
     }
 
     [Fact]
-    public void HasValidAvailabilityRange_ReturnsFalse_WhenRangeIsEqual()
+    public void HasValidAvailabilityRange_WhenRangeIsEqual_ReturnsFalse()
     {
         var criteria = new FilterCriteria
         {
@@ -70,7 +70,7 @@ public class FilterCriteriaTests
     }
 
     [Fact]
-    public void HasValidAvailabilityRange_ReturnsFalse_WhenRangeIsDescending()
+    public void HasValidAvailabilityRange_WhenRangeIsDescending_ReturnsFalse()
     {
         var criteria = new FilterCriteria
         {

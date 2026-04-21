@@ -2,7 +2,7 @@
 
 namespace SearchAndBook.Shared;
 
-public class BookingDTO
+public record BookingDTO
 {
     public int GameId { get; set; }
     public string Name { get; set; } = string.Empty;

@@ -92,7 +92,7 @@ public class BookingService : InterfaceBookingService
                 .ToArray();
         } catch (Exception exception)
         {
-            throw new InvalidOperationException($"Failed to retrieve unavailable time rentaltimeranges for game {gameId}.", exception);
+            throw new InvalidOperationException($"Failed to retrieve unavailable time ranges for game {gameId}.", exception);
         }
     }
 
