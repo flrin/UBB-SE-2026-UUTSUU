@@ -131,9 +131,9 @@ public class SearchAndFilterServiceIntegrationTests
             CreateGame(3, 1, "FutureGame", 10m, 4, 2)
         };
 
-        rentalsRepository.SetAvailability(1, true); // today
-        rentalsRepository.SetAvailability(2, true); // tomorrow
-        rentalsRepository.SetAvailability(3, false); // future -> Set to false so it correctly drops out of "Available Tonight"
+        rentalsRepository.SetAvailability(1, true); 
+        rentalsRepository.SetAvailability(2, true); 
+        rentalsRepository.SetAvailability(3, false); 
 
         var service = new SearchAndFilterService(
             new InMemoryGamesRepository(games, rentalsRepository),
@@ -295,7 +295,7 @@ public class SearchAndFilterServiceIntegrationTests
         Assert.NotNull(result);
     }
 
-    // --- Helpers and Mock Implementations ---
+    
 
     private static SearchAndFilterService CreateSut(IInMemoryRentalsRepository rentalsRepository, InMemoryGeographicalService geographicalService)
     {
@@ -377,7 +377,6 @@ public class SearchAndFilterServiceIntegrationTests
 
         public List<Game> GetRemainingGamesForFeed(int userId)
         {
-            // Returns an empty list to satisfy tests expecting booked games to be entirely excluded from the feed.
             return new List<Game>();
         }
 
