@@ -76,7 +76,7 @@ public class SearchAndFilterServiceIntegrationTests
     }
 
     [Fact]
-    public void GetDiscoveryFeedPaged_ExcludesInactiveAndBookedGames()
+    public void GetDiscoveryFeedPaged_WhenInactiveOrBookedGamesExist_ExcludesThemFromResults()
     {
         var rentalsRepository = new InMemoryRentalsRepository();
 
