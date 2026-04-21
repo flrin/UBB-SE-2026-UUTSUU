@@ -20,6 +20,9 @@ namespace SearchAndBook.ViewModels
         private const int MidnightHour = 0;
         private const int MidnightMinute = 0;
         private const int MidnightSecond = 0;
+        private const int NoPagesAvailable = 0;
+        private const int NoGamesAvailable = 0;
+        private const int InitialPage = 1;
 
         public event Action? OnPageChanged;
 
@@ -132,7 +135,7 @@ namespace SearchAndBook.ViewModels
             get
             {
                 if (TotalGamesCount == 0)
-                    return 1;
+                    return NoPagesAvailable;
                 return (int)Math.Ceiling((double)TotalGamesCount / ItemsPerPage);
             }
         }
@@ -174,7 +177,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public string NoResultsMessage => TotalGamesCount == 0 ? "No games available." : "";
+        public string NoResultsMessage => TotalGamesCount == NoGamesAvailable ? "No games available." : "";
 
         /// <summary>
         /// Loads paginated discovery feed and updates UI properties.
@@ -266,7 +269,7 @@ namespace SearchAndBook.ViewModels
 
                 UpdateAvailabilityRange();
 
-                CurrentPage = 1;
+                CurrentPage = InitialPage;
                 OnSearchRequest?.Invoke(Filter);
             }
             catch (Exception ex)

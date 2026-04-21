@@ -38,12 +38,13 @@
 
         /// <summary>Lowest valid page number.</summary>
         private const int MinimumPageNumber = 1;
+        private const int NoGavesAvailable = 0;
 
         private readonly InterfaceSearchAndFilterService searchService;
         private readonly InterfaceGeographicalService geographicalService;
 
         /// <summary>Cache of loaded BitmapImages keyed by game ID.</summary>
-        private readonly Dictionary<int, BitmapImage?> gameImages = new();
+        private readonly Dictionary<int, BitmapImage?> gameImages = new ();
 
         private BitmapImage? selectedGameImage;
         private string citySearchText = string.Empty;
@@ -69,7 +70,7 @@
         public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>Gets or sets the collection of games currently visible on the active page. Bound directly to the UI list/grid.</summary>
-        public ObservableCollection<GameDTO> VisibleGames { get; set; } = new();
+        public ObservableCollection<GameDTO> VisibleGames { get; set; } = new ();
 
         /// <summary>Gets the images.</summary>
         public Dictionary<int, BitmapImage?> GameImages => this.gameImages;
@@ -101,7 +102,7 @@
             : string.Empty;
 
         /// <summary>Gets or sets the flat list of all games currently subject to pagination.</summary>
-        public List<GameDTO> Games { get; set; } = new();
+        public List<GameDTO> Games { get; set; } = new ();
 
         /// <summary>
         /// Gets or sets the game the user has just tapped/clicked.
@@ -167,10 +168,11 @@
         {
             get
             {
-                if (this.Games == null || this.Games.Count == 0)
+                if (this.Games == null || this.Games.Count == NoGavesAvailable)
                 {
                     return FirstPage;
                 }
+
                 return (int)Math.Ceiling((double)this.Games.Count / ItemsPerPage);
             }
         }
@@ -287,7 +289,7 @@
         public ICommand GoBackCommand { get; }
 
         /// <summary>Gets observable list of city name suggestions shown in the autocomplete dropdown.</summary>
-        public ObservableCollection<string> CitySuggestions { get; } = new();
+        public ObservableCollection<string> CitySuggestions { get; } = new ();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FilteredSearchViewModel"/> class.
@@ -816,7 +818,10 @@
         /// <summary>Fires <see cref="OnGoBackRequest"/> to tell the view to navigate back.</summary>
         private void GoBack()
         {
-            try { this.OnGoBackRequest?.Invoke(); }
+            try
+            {
+                this.OnGoBackRequest?.Invoke();
+            }
             catch (Exception ex) { this.RaiseError($"Could not go back. {ex.Message}"); }
         }
 
