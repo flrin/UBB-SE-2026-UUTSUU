@@ -15,7 +15,7 @@ namespace SearchAndBook.ViewModels
     public class GameDetailsViewModel : INotifyPropertyChanged
     {
         private const long UnregisteredUserID = -1;
-        private const long START_OF_STREAM_POSTION = 0;
+        private const long StartOfStreamPosition = 0;
         private const decimal DefaultTotalPrice = 0;
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -31,14 +31,14 @@ namespace SearchAndBook.ViewModels
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-        private BookingDTO _gameAndUserDetails;
+        private BookingDTO GameAndUserDetail;
 
         public BookingDTO GameAndUserDetails
         {
-            get => _gameAndUserDetails;
+            get => GameAndUserDetail;
             private set
             {
-                _gameAndUserDetails = value;
+                GameAndUserDetail = value;
                 OnPropertyChanged();
             }
         }
@@ -184,7 +184,7 @@ namespace SearchAndBook.ViewModels
 
                 using var stream = new InMemoryRandomAccessStream();
                 await stream.WriteAsync(GameAndUserDetails.Image.AsBuffer());
-                stream.Seek(START_OF_STREAM_POSTION);
+                stream.Seek(StartOfStreamPosition);
 
                 var bitmap = new BitmapImage();
                 await bitmap.SetSourceAsync(stream);
