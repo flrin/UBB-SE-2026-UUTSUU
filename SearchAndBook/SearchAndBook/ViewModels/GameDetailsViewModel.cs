@@ -1,199 +1,302 @@
-﻿using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Windows.Input;
-using Microsoft.UI.Xaml.Media.Imaging;
-using SearchAndBook.CommandHandler;
-using SearchAndBook.Domain;
-using SearchAndBook.Services;
-using SearchAndBook.Shared;
-using Windows.Storage.Streams;
-
-namespace SearchAndBook.ViewModels
+﻿namespace SearchAndBook.ViewModels
 {
+    using System;
+    using System.ComponentModel;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices.WindowsRuntime;
+    using System.Windows.Input;
+    using Microsoft.UI.Xaml.Media.Imaging;
+    using SearchAndBook.CommandHandler;
+    using SearchAndBook.Domain;
+    using SearchAndBook.Services;
+    using SearchAndBook.Shared;
+    using Windows.Storage.Streams;
+
+    /// <summary>
+    /// Provides details for a specific game, including pricing, availability, and booking commands.
+    /// </summary>
     public class GameDetailsViewModel : INotifyPropertyChanged
     {
         private const long UnregisteredUserID = -1;
         private const long StartOfStreamPosition = 0;
         private const decimal DefaultTotalPrice = 0;
+        private readonly InterfaceBookingService bookingService;
+        private bool hasError;
+        private decimal totalPrice;
+        private BitmapImage? gameImage;
+        private string? ownerImageUrl;
+        private BookingDTO gameAndUserDetail;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GameDetailsViewModel"/> class.
+        /// </summary>
+        /// <param name="bookingService">The service used for booking operations and data retrieval.</param>
+        /// <param name="gameId">The unique identifier of the game to display details for.</param>
+        public GameDetailsViewModel(InterfaceBookingService bookingService, int gameId)
+        {
+            this.bookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
+            this.gameAndUserDetail = this.bookingService.GetBookingInformationForSpecificGame(gameId);
+            try
+            {
+                this.GameAndUserDetails = this.bookingService.GetBookingInformationForSpecificGame(gameId);
+                this.UnavailableTimeRanges = this.bookingService.GetUnavailableTimeRanges(gameId) ?? Array.Empty<TimeRange>();
+                this.LoadGameImage();
+                this.LoadOwnerImage();
+                this.HasError = false;
+            }
+            catch (Exception exception)
+            {
+                this.HasError = true;
+                this.UnavailableTimeRanges = Array.Empty<TimeRange>();
+                this.OnMessageRequested?.Invoke($"Could not load game details. {exception.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Occurs when a property value changes.
+        /// </summary>
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        /// <summary>
+        /// Occurs when a navigation back request is made.
+        /// </summary>
         public event Action? OnGoBackRequested;
 
+        /// <summary>
+        /// Occurs when the user requests to start the booking process for a specific game and time range.
+        /// </summary>
         public event Action<BookingDTO, TimeRange>? OnStartBookingRequested;
 
+        /// <summary>
+        /// Occurs when a message or notification needs to be displayed to the user.
+        /// </summary>
         public event Action<string>? OnMessageRequested;
 
+        /// <summary>
+        /// Gets the current date.
+        /// </summary>
         public DateTimeOffset Today => DateTimeOffset.Now.Date;
 
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-        private BookingDTO GameAndUserDetail;
-
+        /// <summary>
+        /// Gets the combined details of the game and its owner.
+        /// </summary>
         public BookingDTO GameAndUserDetails
         {
-            get => GameAndUserDetail;
+            get => this.gameAndUserDetail;
             private set
             {
-                GameAndUserDetail = value;
-                OnPropertyChanged();
+                this.gameAndUserDetail = value;
+                this.OnPropertyChanged();
             }
         }
 
-        private bool _hasError;
-
+        /// <summary>
+        /// Gets a value indicating whether the view model is in an error state.
+        /// </summary>
         public bool HasError
         {
-            get => _hasError;
+            get => this.hasError;
             private set
             {
-                _hasError = value;
-                OnPropertyChanged();
+                this.hasError = value;
+                this.OnPropertyChanged();
             }
         }
 
-        private decimal _totalPrice;
-
+        /// <summary>
+        /// Gets the total calculated price for the current selection.
+        /// </summary>
         public decimal TotalPrice
         {
-            get => _totalPrice;
+            get => this.totalPrice;
             private set
             {
-                _totalPrice = value;
-                OnPropertyChanged();
+                this.totalPrice = value;
+                this.OnPropertyChanged();
             }
         }
 
-        private BitmapImage? _gameImage;
-
+        /// <summary>
+        /// Gets the image of the game.
+        /// </summary>
         public BitmapImage? GameImage
         {
-            get => _gameImage;
+            get => this.gameImage;
             private set
             {
-                _gameImage = value;
-                OnPropertyChanged();
+                this.gameImage = value;
+                this.OnPropertyChanged();
             }
         }
 
-        private string? _ownerImageUrl;
-
+        /// <summary>
+        /// Gets the URL of the owner's profile image.
+        /// </summary>
         public string? OwnerImageUrl
         {
-            get => _ownerImageUrl;
+            get => this.ownerImageUrl;
             private set
             {
-                _ownerImageUrl = value;
-                OnPropertyChanged();
+                this.ownerImageUrl = value;
+                this.OnPropertyChanged();
             }
         }
 
-        private readonly InterfaceBookingService _bookingService;
-
+        /// <summary>
+        /// Gets the array of time ranges when the game is already booked.
+        /// </summary>
         public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
 
-        public ICommand GoBackCommand => new RelayCommand(_ => GoBack());
+        /// <summary>
+        /// Gets the command to navigate back to the previous view.
+        /// </summary>
+        public ICommand GoBackCommand => new RelayCommand(_ => this.GoBack());
 
+        /// <summary>
+        /// Gets the command to initiate the booking process for the selected game.
+        /// </summary>
         public ICommand BookCommand => new RelayCommand(commandParameter =>
         {
             try
             {
                 if (commandParameter is TimeRange timeRange)
                 {
-                    StartBooking(timeRange);
+                    this.StartBooking(timeRange);
                 }
                 else
                 {
-                    OnMessageRequested?.Invoke("Invalid booking interval selected.");
+                    this.OnMessageRequested?.Invoke("Invalid booking interval selected.");
                 }
             }
             catch (Exception exception)
             {
-                OnMessageRequested?.Invoke($"Could not start booking. {exception.Message}");
+                this.OnMessageRequested?.Invoke($"Could not start booking. {exception.Message}");
             }
         });
 
+        /// <summary>
+        /// Gets the command to initiate the booking process for the selected game.
+        /// </summary>
         public ICommand ChatWithOwnerCommand => new RelayCommand(_ => { /* later */ });
 
-        public GameDetailsViewModel(InterfaceBookingService bookingService, int gameId)
-        {
-            _bookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
-
-            try
-            {
-                GameAndUserDetails = _bookingService.GetBookingInformationForSpecificGame(gameId);
-                UnavailableTimeRanges = _bookingService.GetUnavailableTimeRanges(gameId) ?? Array.Empty<TimeRange>();
-                LoadGameImage();
-                LoadOwnerImage();
-                HasError = false;
-            }
-            catch (Exception exception)
-            {
-                HasError = true;
-                UnavailableTimeRanges = Array.Empty<TimeRange>();
-                OnMessageRequested?.Invoke($"Could not load game details. {exception.Message}");
-            }
-        }
-
+        /// <summary>
+        /// Checks if the game is available for a given time range.
+        /// </summary>
+        /// <param name="timeRange">The period to check for availability.</param>
+        /// <returns>True if available; otherwise, false.</returns>
         public bool CheckGameAvailability(TimeRange timeRange)
         {
             try
             {
                 if (timeRange == null)
+                {
                     return false;
+                }
 
-                return _bookingService.CheckGameAvailability(GameAndUserDetails.GameId, timeRange);
+                return this.bookingService.CheckGameAvailability(this.GameAndUserDetails.GameId, timeRange);
             }
             catch (Exception exception)
             {
-                OnMessageRequested?.Invoke($"Could not check availability. {exception.Message}");
+                this.OnMessageRequested?.Invoke($"Could not check availability. {exception.Message}");
                 return false;
             }
         }
 
+        /// <summary>
+        /// Calculates the price for a specific booking duration.
+        /// </summary>
+        /// <param name="timeRange">The booking duration.</param>
+        /// <returns>The total calculated price.</returns>
         public decimal CalculatePrice(TimeRange timeRange)
         {
             try
             {
                 if (timeRange == null)
+                {
                     throw new ArgumentNullException(nameof(timeRange));
+                }
 
-                TotalPrice = _bookingService.CalculateTotalPriceForRentingASpecificGame(GameAndUserDetails.Price, timeRange);
-                return TotalPrice;
+                this.TotalPrice = this.bookingService.CalculateTotalPriceForRentingASpecificGame(this.GameAndUserDetails.Price, timeRange);
+                return this.TotalPrice;
             }
             catch (Exception exception)
             {
-                OnMessageRequested?.Invoke($"Could not calculate price. {exception.Message}");
-                TotalPrice = DefaultTotalPrice;
+                this.OnMessageRequested?.Invoke($"Could not calculate price. {exception.Message}");
+                this.TotalPrice = DefaultTotalPrice;
                 return DefaultTotalPrice;
             }
         }
+
+        /// <summary>
+        /// Initiates the booking flow for the selected game.
+        /// </summary>
+        /// <param name="timeRange">The chosen time range for the reservation.</param>
+        public void StartBooking(TimeRange timeRange)
+        {
+            try
+            {
+                if (SessionContext.GetInstance().UserId == UnregisteredUserID)
+                {
+                    this.OnMessageRequested?.Invoke("User not logged in. Please log in first");
+
+                    // TODO login
+                    return;
+                }
+
+                if (timeRange == null)
+                {
+                    this.OnMessageRequested?.Invoke("Please select a valid booking timeRange.");
+                    return;
+                }
+
+                this.OnStartBookingRequested?.Invoke(this.GameAndUserDetails, timeRange);
+            }
+            catch (Exception exception)
+            {
+                this.OnMessageRequested?.Invoke($"Could not continue to booking. {exception.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Triggers the go-back navigation logic.
+        /// </summary>
+        public void GoBack()
+        {
+            try
+            {
+                this.OnGoBackRequested?.Invoke();
+            }
+            catch (Exception exception)
+            {
+                this.OnMessageRequested?.Invoke($"Could not go back. {exception.Message}");
+            }
+        }
+
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
+           => this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
         private async void LoadGameImage()
         {
             try
             {
-                if (GameAndUserDetails.Image == null || GameAndUserDetails.Image.Length == 0)
+                if (this.GameAndUserDetails.Image == null || this.GameAndUserDetails.Image.Length == 0)
                 {
-                    GameImage = null;
+                    this.GameImage = null;
                     return;
                 }
 
                 using var stream = new InMemoryRandomAccessStream();
-                await stream.WriteAsync(GameAndUserDetails.Image.AsBuffer());
+                await stream.WriteAsync(this.GameAndUserDetails.Image.AsBuffer());
                 stream.Seek(StartOfStreamPosition);
 
                 var bitmap = new BitmapImage();
                 await bitmap.SetSourceAsync(stream);
-                GameImage = bitmap;
+                this.GameImage = bitmap;
             }
             catch (Exception exception)
             {
-                GameImage = null;
-                OnMessageRequested?.Invoke($"Could not load game image. {exception.Message}");
+                this.GameImage = null;
+                this.OnMessageRequested?.Invoke($"Could not load game image. {exception.Message}");
             }
         }
 
@@ -201,57 +304,18 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(GameAndUserDetails.AvatarUrl))
+                if (string.IsNullOrWhiteSpace(this.GameAndUserDetails.AvatarUrl))
                 {
-                    OwnerImageUrl = null;
+                    this.OwnerImageUrl = null;
                     return;
                 }
 
-                OwnerImageUrl = GameAndUserDetails.AvatarUrl;
+                this.OwnerImageUrl = this.GameAndUserDetails.AvatarUrl;
             }
             catch (Exception exception)
             {
-                OwnerImageUrl = null;
-                OnMessageRequested?.Invoke($"Could not load owner image. {exception.Message}");
-            }
-        }
-
-        public void StartBooking(TimeRange timeRange)
-        {
-            try
-            {
-                if (SessionContext.GetInstance().UserId == UnregisteredUserID)
-                {
-                    OnMessageRequested?.Invoke("User not logged in. Please log in first");
-
-                    // TODO login
-
-                    return;
-                }
-
-                if (timeRange == null)
-                {
-                    OnMessageRequested?.Invoke("Please select a valid booking timeRange.");
-                    return;
-                }
-
-                OnStartBookingRequested?.Invoke(GameAndUserDetails, timeRange);
-            }
-            catch (Exception exception)
-            {
-                OnMessageRequested?.Invoke($"Could not continue to booking. {exception.Message}");
-            }
-        }
-
-        public void GoBack()
-        {
-            try
-            {
-                OnGoBackRequested?.Invoke();
-            }
-            catch (Exception exception)
-            {
-                OnMessageRequested?.Invoke($"Could not go back. {exception.Message}");
+                this.OwnerImageUrl = null;
+                this.OnMessageRequested?.Invoke($"Could not load owner image. {exception.Message}");
             }
         }
     }

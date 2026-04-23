@@ -1,32 +1,44 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
-using SearchAndBook.Domain;
-using SearchAndBook.Repositories;
-using SearchAndBook.Services;
-using SearchAndBook.Shared;
-using SearchAndBook.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace SearchAndBook.Views
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using Microsoft.UI.Xaml.Navigation;
+    using SearchAndBook.Domain;
+    using SearchAndBook.Repositories;
+    using SearchAndBook.Services;
+    using SearchAndBook.Shared;
+    using SearchAndBook.ViewModels;
+
+    /// <summary>
+    /// Provides the user interface for viewing detailed information about a game and selecting rental dates.
+    /// </summary>
     public sealed partial class GameDetailsView : Page
     {
+        private DateTime? selectedDateStart;
+        private DateTime? selectedDateEnd;
 
-        private DateTime? _selectedDateStart;
-        private DateTime? _selectedDateEnd;
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GameDetailsView"/> class.
+        /// </summary>
         public GameDetailsView()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
+        /// <summary>
+        /// Invoked when the Page is loaded and becomes the current source of a parent Frame.
+        /// </summary>
+        /// <param name="eventArgs">Event data that can be examined by overriding code.</param>
         protected override void OnNavigatedTo(NavigationEventArgs eventArgs)
         {
             base.OnNavigatedTo(eventArgs);
-            if (eventArgs.Parameter is not int gameId) { return; }
+            if (eventArgs.Parameter is not int gameId)
+            {
+                return;
+            }
 
             var gameRepository = new GamesRepository();
             var rentalRepository = new RentalsRepository();
@@ -36,13 +48,15 @@ namespace SearchAndBook.Views
 
             viewModel.OnGoBackRequested += () =>
             {
-                if (Frame.CanGoBack)
-                    Frame.GoBack();
+                if (this.Frame.CanGoBack)
+                {
+                    this.Frame.GoBack();
+                }
             };
 
             viewModel.OnStartBookingRequested += (bookingDto, range) =>
             {
-                Frame.Navigate(typeof(ConfirmBookingView), (bookingDto, range));
+                this.Frame.Navigate(typeof(ConfirmBookingView), (bookingDto, range));
             };
 
             viewModel.OnMessageRequested += async message =>
@@ -52,7 +66,7 @@ namespace SearchAndBook.Views
                     Title = "Booking",
                     Content = message,
                     CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
+                    XamlRoot = this.XamlRoot,
                 };
 
                 await dialog.ShowAsync();
@@ -63,13 +77,13 @@ namespace SearchAndBook.Views
 
         private void OnBackClicked(object sender, RoutedEventArgs eventArgs)
         {
-            var viewModel = (GameDetailsViewModel) this.DataContext;
+            var viewModel = (GameDetailsViewModel)this.DataContext;
             viewModel.GoBack();
         }
 
         private async void OnBookClicked(object sender, RoutedEventArgs eventArgs)
         {
-            var selectedDates = RentalCalendar.SelectedDates;
+            var selectedDates = this.RentalCalendar.SelectedDates;
             if (selectedDates.Count == 0)
             {
                 var dialog = new ContentDialog
@@ -77,7 +91,7 @@ namespace SearchAndBook.Views
                     Title = "Invalid selection",
                     Content = "Please select at least one date.",
                     CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
+                    XamlRoot = this.XamlRoot,
                 };
                 await dialog.ShowAsync();
                 return;
@@ -95,28 +109,33 @@ namespace SearchAndBook.Views
         private void OnDatesChanged(CalendarView sender, CalendarViewSelectedDatesChangedEventArgs eventArgs)
         {
             if (this.DataContext is not GameDetailsViewModel viewModel)
+            {
                 return;
+            }
 
-            var selectedDates = RentalCalendar.SelectedDates;
+            var selectedDates = this.RentalCalendar.SelectedDates;
 
             if (selectedDates.Count > 2)
             {
                 var datesToKeep = new List<DateTimeOffset>
                     {
                         selectedDates[selectedDates.Count - 2],
-                        selectedDates[selectedDates.Count - 1]
+                        selectedDates[selectedDates.Count - 1],
                     };
-                RentalCalendar.SelectedDates.Clear();
+                this.RentalCalendar.SelectedDates.Clear();
                 foreach (var date in datesToKeep)
-                    RentalCalendar.SelectedDates.Add(date);
+                {
+                    this.RentalCalendar.SelectedDates.Add(date);
+                }
+
                 return;
             }
 
             if (selectedDates.Count < 1)
             {
-                _selectedDateStart = null;
-                _selectedDateEnd = null;
-                ForceRedrawCalendar();
+                this.selectedDateStart = null;
+                this.selectedDateEnd = null;
+                this.ForceRedrawCalendar();
                 return;
             }
 
@@ -125,26 +144,28 @@ namespace SearchAndBook.Views
                 .OrderBy(d => d)
                 .ToList();
 
-            _selectedDateStart = sorted[0];
-            _selectedDateEnd = sorted[sorted.Count - 1];
+            this.selectedDateStart = sorted[0];
+            this.selectedDateEnd = sorted[sorted.Count - 1];
 
-            var range = new TimeRange(_selectedDateStart.Value, _selectedDateEnd.Value);
+            var range = new TimeRange(this.selectedDateStart.Value, this.selectedDateEnd.Value);
             viewModel.CalculatePrice(range);
 
-            ForceRedrawCalendar();
+            this.ForceRedrawCalendar();
         }
 
         private void ForceRedrawCalendar()
         {
-            var currentDate = RentalCalendar.MinDate;
-            RentalCalendar.MinDate = currentDate.AddDays(1);
-            RentalCalendar.MinDate = currentDate;
+            var currentDate = this.RentalCalendar.MinDate;
+            this.RentalCalendar.MinDate = currentDate.AddDays(1);
+            this.RentalCalendar.MinDate = currentDate;
         }
 
         private void OnDayItemChanging(CalendarView sender, CalendarViewDayItemChangingEventArgs eventArgs)
         {
             if (this.DataContext is not GameDetailsViewModel viewModel)
+            {
                 return;
+            }
 
             var date = eventArgs.Item.Date.Date;
             var today = DateTimeOffset.Now.Date;
@@ -175,8 +196,8 @@ namespace SearchAndBook.Views
                 return;
             }
 
-            if (_selectedDateStart.HasValue && _selectedDateEnd.HasValue &&
-                date >= _selectedDateStart.Value.Date && date <= _selectedDateEnd.Value.Date)
+            if (this.selectedDateStart.HasValue && this.selectedDateEnd.HasValue &&
+                date >= this.selectedDateStart.Value.Date && date <= this.selectedDateEnd.Value.Date)
             {
                 eventArgs.Item.IsBlackout = false;
                 eventArgs.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod);
