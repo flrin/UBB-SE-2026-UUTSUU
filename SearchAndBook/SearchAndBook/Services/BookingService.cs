@@ -1,9 +1,8 @@
-﻿using System;
+﻿namespace SearchAndBook.Services;
+using System;
 using SearchAndBook.Domain;
 using SearchAndBook.Repositories;
 using SearchAndBook.Shared;
-
-namespace SearchAndBook.Services;
 
 /// <summary>
 /// Service responsible for handling booking operations, including retrieving game details,
@@ -11,13 +10,13 @@ namespace SearchAndBook.Services;
 /// </summary>
 public class BookingService : InterfaceBookingService
 {
+    private const int MinimumValidDayCount = 1;
     private readonly InterfaceGamesRepository gamesRepository;
     private readonly InterfaceRentalsRepository rentalsRepository;
     private readonly InterfaceUsersRepository usersRepository;
-    private const int MinimumValidDayCount = 1;
 
     /// <summary>
-    /// Initializes a new instance of the BookingService class.
+    /// Initializes a new instance of the <see cref="BookingService"/> class.
     /// </summary>
     /// <param name="gamesRepository">The games repository.</param>
     /// <param name="rentalsRepository">The rentals repository.</param>
@@ -42,13 +41,13 @@ public class BookingService : InterfaceBookingService
     {
         try
         {
-            var bookedGame = gamesRepository.GetGameById(gameId);
+            var bookedGame = this.gamesRepository.GetGameById(gameId);
             if (bookedGame == null)
             {
                 throw new InvalidOperationException($"Game with id {gameId} was not isfound.");
             }
 
-            var gameOwner = usersRepository.GetGameById(bookedGame.OwnerId);
+            var gameOwner = this.usersRepository.GetGameById(bookedGame.OwnerId);
             if (gameOwner == null)
             {
                 throw new InvalidOperationException($"Owner for game id {gameId} was not isfound.");
@@ -68,13 +67,12 @@ public class BookingService : InterfaceBookingService
                 DisplayName = gameOwner.DisplayName,
                 IsSuspended = gameOwner.IsSuspended,
                 AvatarUrl = gameOwner.AvatarUrl,
-                CreatedAt = gameOwner.CreatedAt
+                CreatedAt = gameOwner.CreatedAt,
             };
         }
         catch (Exception exception)
         {
             throw new InvalidOperationException($"Failed to retrieve details for game {gameId}.", exception);
-
         }
     }
 
@@ -87,10 +85,11 @@ public class BookingService : InterfaceBookingService
     {
         try
         {
-            return rentalsRepository
+            return this.rentalsRepository
                 .GetUnavailableTimeRanges(gameId)
                 .ToArray();
-        } catch (Exception exception)
+        }
+        catch (Exception exception)
         {
             throw new InvalidOperationException($"Failed to retrieve unavailable time ranges for game {gameId}.", exception);
         }
@@ -106,8 +105,9 @@ public class BookingService : InterfaceBookingService
     {
         try
         {
-            return rentalsRepository.CheckGameAvailability(timeRange, gameId);
-        } catch (Exception exception)
+            return this.rentalsRepository.CheckGameAvailability(timeRange, gameId);
+        }
+        catch (Exception exception)
         {
             throw new InvalidOperationException($"Failed to check availability for game {gameId}.", exception);
         }
@@ -116,9 +116,9 @@ public class BookingService : InterfaceBookingService
     /// <summary>
     /// Calculates the total price for renting a game based on the daily price and the duration of the rental time range.
     /// </summary>
-    /// <param name="price">The daily renting price</param>
-    /// <param name="timeRange">The total time timeRange of renting</param>
-    /// <returns>total price calculated as a decimal</returns>
+    /// <param name="price">The daily renting price.</param>
+    /// <param name="timeRange">The total time timeRange of renting.</param>
+    /// <returns>Total price calculated as a decimal.</returns>
     public decimal CalculateTotalPriceForRentingASpecificGame(decimal price, TimeRange timeRange)
     {
         int days = (timeRange.EndTime - timeRange.StartTime).Days + MinimumValidDayCount;
@@ -127,14 +127,15 @@ public class BookingService : InterfaceBookingService
         {
             days = MinimumValidDayCount;
         }
+
         return days * price;
     }
 
     /// <summary>
     /// Calculates the number of days in a given time range, ensuring that it returns at least 1 day even if the end time is the same as or before the start time.
     /// </summary>
-    /// <param name="selectedTimeRange"></param>
-    /// <returns></returns>
+    /// <param name="selectedTimeRange">The time range for which to calculate the number of days.</param>
+    /// <returns>The number of days in the given time range, ensuring at least 1 day.</returns>
     public int CalculateNumberOfDaysInAGivenTimeRange(TimeRange selectedTimeRange)
     {
         int days = (selectedTimeRange.EndTime - selectedTimeRange.StartTime).Days + MinimumValidDayCount;

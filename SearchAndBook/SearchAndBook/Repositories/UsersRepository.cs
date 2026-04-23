@@ -1,25 +1,31 @@
-﻿using System;
+﻿namespace SearchAndBook.Repositories;
+using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using SearchAndBook.Domain;
 using SearchAndBook.Repositories.Sql;
 using SearchAndBook.Shared;
 
-namespace SearchAndBook.Repositories;
+// How ADO.NET handles connections :
+// - When you write using var connection = new SqlConnection(...) and call .Open(), Microsoft
+// checks the pool, so the pool of connections is handled by .net
+// - If there is a free connection, it gives it to you.
+// - When your "using" block finishes, it calls .Close().
+// - Microsoft intercepts your .Close() command. It doesn't actually destroy the connection
+// to the database. It just wipes the data clean and parks it back in the hidden pool for
+// the next person to use.
 
-/// How ADO.NET handles connections : 
-/// - When you write using var connection = new SqlConnection(...) and call .Open(), Microsoft 
-/// checks the pool, so the pool of connections is handled by .net
-/// - If there is a free connection, it gives it to you.
-/// - When your "using" block finishes, it calls .Close().
-/// - Microsoft intercepts your .Close() command. It doesn't actually destroy the connection 
-/// to the database. It just wipes the data clean and parks it back in the hidden pool for 
-/// the next person to use.
-
-
+/// <summary>
+/// UsersRepository is responsible for managing user data, including retrieving user details by ID and fetching all users from the database. It uses ADO.NET to interact with a SQL database, executing queries defined in UserQueries and converting the results into User domain objects.
+/// </summary>
 public class UsersRepository : InterfaceUsersRepository
 {
-    // Get User by id
+    /// <summary>
+    /// Retrieves a user by their unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the user to retrieve.</param>
+    /// <returns>A <see cref="User"/> object representing the user with the specified identifier, or <see langword="null"/> if no
+    /// user is found.</returns>
     public User? GetGameById(int id)
     {
         try
@@ -45,6 +51,10 @@ public class UsersRepository : InterfaceUsersRepository
         }
     }
 
+    /// <summary>
+    /// Retrieves all users from the data store.
+    /// </summary>
+    /// <returns>A list of <see cref="User"/> objects representing all users. The list will be empty if no users are found.</returns>
     public List<User> GetAll()
     {
         try
@@ -87,7 +97,7 @@ public class UsersRepository : InterfaceUsersRepository
             StreetName = reader["street_name"] == DBNull.Value ? null : Convert.ToString(reader["street_name"]),
             StreetNumber = reader["street_number"] == DBNull.Value ? null : Convert.ToString(reader["street_number"]),
             City = Convert.ToString(reader["city"]) ?? string.Empty,
-            Country = Convert.ToString(reader["country"]) ?? string.Empty
+            Country = Convert.ToString(reader["country"]) ?? string.Empty,
         };
     }
 }

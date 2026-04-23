@@ -26,7 +26,7 @@
     /// TYPICAL FLOW:
     /// - Load Image (byte[]) from database
     /// - Convert it using ImageHelper.ToBitmapImage(...)
-    /// - Assign result to GameImage for UI display
+    /// - Assign result to GameImage for UI display.
     /// </summary>
     public class GameDTO : INotifyPropertyChanged
     {

@@ -59,14 +59,9 @@
 
                 foreach (var filteredGame in filteredGamesFromRepository)
                 {
-                    if (!cachedOwnersById.TryGetValue(filteredGame.OwnerId, out var cachedOwnerGame))
+                    if (!cachedOwnersById.ContainsKey(filteredGame.OwnerId))
                     {
-                        cachedOwnerGame = this.usersRepository.GetGameById(filteredGame.OwnerId);
-
-                        if (cachedOwnerGame != null)
-                        {
-                            cachedOwnersById[filteredGame.OwnerId] = cachedOwnerGame;
-                        }
+                        cachedOwnersById[filteredGame.OwnerId] = this.usersRepository.GetGameById(filteredGame.OwnerId);
                     }
 
                     var gameOwner = cachedOwnersById[filteredGame.OwnerId];
@@ -176,96 +171,96 @@
             {
                 IEnumerable<GameDTO> filteredGames = initialGamesCollection;
 
-                if (!string.IsNullOrWhiteSpace(activeFilter.Name))
-                {
-                    filteredGames = filteredGames.Where(filteredGame =>
-                        filteredGame.Name.Contains(activeFilter.Name, StringComparison.OrdinalIgnoreCase));
-                }
+				if (!string.IsNullOrWhiteSpace(activeFilter.Name))
+				{
+					filteredGames = filteredGames.Where(filteredGame =>
+						filteredGame.Name.Contains(activeFilter.Name, StringComparison.OrdinalIgnoreCase));
+				}
 
-                if (activeFilter.MaximumPrice.HasValue)
-                {
-                    filteredGames = filteredGames.Where(filteredGame =>
-                        filteredGame.Price <= activeFilter.MaximumPrice.Value);
-                }
+				if (activeFilter.MaximumPrice.HasValue)
+				{
+					filteredGames = filteredGames.Where(filteredGame =>
+						filteredGame.Price <= activeFilter.MaximumPrice.Value);
+				}
 
-                if (activeFilter.PlayerCount.HasValue)
-                {
-                    filteredGames = filteredGames.Where(filteredGame =>
-                        filteredGame.MaximumPlayerNumber >= activeFilter.PlayerCount.Value);
-                }
+				if (activeFilter.PlayerCount.HasValue)
+				{
+					filteredGames = filteredGames.Where(filteredGame =>
+						filteredGame.MaximumPlayerNumber >= activeFilter.PlayerCount.Value);
+				}
 
-                if (!string.IsNullOrWhiteSpace(activeFilter.City) &&
-                    activeFilter.SortOption != SortOption.Location)
-                {
-                    filteredGames = filteredGames.Where(filteredGame =>
-                        !string.IsNullOrWhiteSpace(filteredGame.City) &&
-                        filteredGame.City.Contains(activeFilter.City, StringComparison.OrdinalIgnoreCase));
-                }
+				if (!string.IsNullOrWhiteSpace(activeFilter.City) &&
+					activeFilter.SortOption != SortOption.Location)
+				{
+					filteredGames = filteredGames.Where(filteredGame =>
+						!string.IsNullOrWhiteSpace(filteredGame.City) &&
+						filteredGame.City.Contains(activeFilter.City, StringComparison.OrdinalIgnoreCase));
+				}
 
-                switch (activeFilter.SortOption)
-                {
-                    case SortOption.PriceAscending:
-                        filteredGames = filteredGames.OrderBy(filteredGame => filteredGame.Price);
-                        break;
+				switch (activeFilter.SortOption)
+				{
+					case SortOption.PriceAscending:
+						filteredGames = filteredGames.OrderBy(filteredGame => filteredGame.Price);
+						break;
 
-                    case SortOption.PriceDescending:
-                        filteredGames = filteredGames.OrderByDescending(filteredGame => filteredGame.Price);
-                        break;
+					case SortOption.PriceDescending:
+						filteredGames = filteredGames.OrderByDescending(filteredGame => filteredGame.Price);
+						break;
 
-                    case SortOption.Location:
-                        if (!string.IsNullOrWhiteSpace(activeFilter.City))
-                        {
-                            var userCityDetails =
-                                this.geographicalService.GetCityDetails(activeFilter.City);
+					case SortOption.Location:
+						if (!string.IsNullOrWhiteSpace(activeFilter.City))
+						{
+							var userCityDetails =
+								this.geographicalService.GetCityDetails(activeFilter.City);
 
                             if (userCityDetails.isFound)
-                            {
-                                var cachedCityDistanceLookup = new Dictionary<string, double?>();
+							{
+								var cachedCityDistanceLookup = new Dictionary<string, double?>();
 
-                                filteredGames = filteredGames.OrderBy(filteredGame =>
-                                {
-                                    if (string.IsNullOrWhiteSpace(filteredGame.City))
+								filteredGames = filteredGames.OrderBy(filteredGame =>
+								{
+									if (string.IsNullOrWhiteSpace(filteredGame.City))
                                     {
-                                        return double.MaxValue;
-                                    }
+										return double.MaxValue;
+									}
 
-                                    if (!cachedCityDistanceLookup.TryGetValue(filteredGame.City, out double? cachedDistance))
-                                    {
-                                        var gameCityDetails =
-                                            this.geographicalService.GetCityDetails(filteredGame.City);
+									if (!cachedCityDistanceLookup.TryGetValue(filteredGame.City, out double? cachedDistance))
+									{
+										var gameCityDetails =
+											this.geographicalService.GetCityDetails(filteredGame.City);
 
-                                        cachedDistance = gameCityDetails.isFound
-                                            ? GeographicDistance.CalculateDistance(
-                                                userCityDetails.latitude,
-                                                userCityDetails.longitude,
-                                                gameCityDetails.latitude,
-                                                gameCityDetails.longitude)
-                                            : null;
+										cachedDistance = gameCityDetails.isFound
+											? GeographicDistance.CalculateDistance(
+												userCityDetails.latitude,
+												userCityDetails.longitude,
+												gameCityDetails.latitude,
+												gameCityDetails.longitude)
+											: null;
 
-                                        cachedCityDistanceLookup[filteredGame.City] = cachedDistance;
-                                    }
+										cachedCityDistanceLookup[filteredGame.City] = cachedDistance;
+									}
 
-                                    return cachedDistance ?? double.MaxValue;
-                                });
-                            }
-                        }
+									return cachedDistance ?? double.MaxValue;
+								});
+							}
+						}
 
-                        break;
+						break;
 
-                    case SortOption.None:
-                    default:
-                        break;
-                }
+					case SortOption.None:
+					default:
+						break;
+				}
 
-                if (activeFilter.AvailabilityRange != null)
-                {
-                    filteredGames = filteredGames.Where(game =>
-                        this.rentalsRepository.CheckGameAvailability(
-                            activeFilter.AvailabilityRange,
-                            game.GameId));
-                }
+				if (activeFilter.AvailabilityRange != null)
+				{
+					filteredGames = filteredGames.Where(game =>
+						this.rentalsRepository.CheckGameAvailability(
+							activeFilter.AvailabilityRange,
+							game.GameId));
+				}
 
-                return filteredGames.ToArray();
+				return filteredGames.ToArray();
             }
             catch (Exception ex)
             {
@@ -273,14 +268,14 @@
             }
         }
 
-        /// <summary>
-        /// Retrieves a paginated discovery feed, splitting games into those available tonight and others.
-        /// </summary>
-        /// <param name="userId">The ID of the user for whom the feed is generated.</param>
-        /// <param name="page">The current page number (1-based).</param>
-        /// <param name="pageSize">The number of items to include per page.</param>
-        /// <returns>A tuple containing available games for tonight, other available games, and the total count of games.</returns>
-        public (List<GameDTO> availableTonight, List<GameDTO> others, int totalAvailableGamesCount)
+		/// <summary>
+		/// Retrieves a paginated discovery feed, splitting games into those available tonight and others.
+		/// </summary>
+		/// <param name="userId">The ID of the user for whom the feed is generated.</param>
+		/// <param name="page">The current page number (1-based).</param>
+		/// <param name="pageSize">The number of items to include per page.</param>
+		/// <returns>A tuple containing available games for tonight, other available games, and the total count of games.</returns>
+		public (List<GameDTO> availableTonight, List<GameDTO> others, int totalAvailableGamesCount)
             GetDiscoveryFeedPaged(int userId, int page, int pageSize)
          {
                 var availableTonightGameList = this.GetGamesFeedAvailableTonightByUser(userId).ToList();
@@ -308,8 +303,8 @@
         /// <summary>
         /// Validates if a given date range is logical (start date is before or equal to end date).
         /// </summary>
-        /// <param name="requestedStartDate">The start date of the range.</param>
-        /// <param name="requestedEndDate">The end date of the range.</param>
+        /// <param name="start">The start date of the range.</param>
+        /// <param name="end">The end date of the range.</param>
         /// <returns>True if the range is valid or both dates are null; false if only one date is provided or start is after end.</returns>
         public bool IsValidDateRange(DateTime? requestedStartDate, DateTime? requestedEndDate)
         {
@@ -329,7 +324,7 @@
         /// <summary>
         /// checks if the number of players if valid.
         /// </summary>
-        /// <param name="playersNumber">number of players.</param>
+        /// <param name="players">number of players.</param>
         /// <returns>true if the value is valid, false otherwise.</returns>
         public bool IsValidPlayersCount(int? playersNumber)
         {
@@ -344,45 +339,48 @@
         /// <summary>
         /// Updates the filter criteria object with values provided from the user interface.
         /// </summary>
-        /// <param name="targetFilter">The filter object to be updated.</param>
-        /// <param name="selectedMaximumPrice">The maximum price selected by the user.</param>
+        /// <param name="filter">The filter object to be updated.</param>
+        /// <param name="selectedMaxPrice">The maximum price selected by the user.</param>
         /// <param name="selectedMinimumPlayerCount">The minimum number of players selected by the user.</param>
         /// <param name="selectedStartDate">The start date for availability.</param>
         /// <param name="selectedEndDate">The end date for availability.</param>
         public void UpdateFilterFromUI(FilterCriteria targetFilter, double selectedMaximumPrice, double selectedMinimumPlayerCount, DateTime? selectedStartDate, DateTime? selectedEndDate)
         {
-            targetFilter.MaximumPrice = selectedMaximumPrice > MinimumFilterValue
+			// price
+			targetFilter.MaximumPrice = selectedMaximumPrice > MinimumFilterValue
                 ? (decimal?)selectedMaximumPrice
-                : null;
+				: null;
 
-            targetFilter.PlayerCount = selectedMinimumPlayerCount > MinimumFilterValue
+			// players
+			targetFilter.PlayerCount = selectedMinimumPlayerCount > MinimumFilterValue
                 ? (int?)selectedMinimumPlayerCount
                 : null;
 
+            // date
             if (this.IsValidDateRange(selectedStartDate, selectedEndDate))
             {
                 if (selectedStartDate.HasValue && selectedEndDate.HasValue)
                 {
-                    targetFilter.AvailabilityRange = new TimeRange(
+					targetFilter.AvailabilityRange = new TimeRange(
                         selectedStartDate.Value,
                         selectedEndDate.Value);
                 }
                 else
                 {
-                    targetFilter.AvailabilityRange = null;
+					targetFilter.AvailabilityRange = null;
                 }
             }
             else
             {
-                targetFilter.AvailabilityRange = null;
+				targetFilter.AvailabilityRange = null;
             }
         }
 
         /// <summary>
         /// Maps a <see cref="Game""")/>> entity and its owner's information to a <see cref="GameDTO""")/>>.
         /// </summary>
-        /// <param name="gameEntity">The game entity to map.</param>
-        /// <param name="gameOwnerEntity">The user who owns the game.</param>
+        /// <param name="game">The game entity to map.</param>
+        /// <param name="owner">The user who owns the game.</param>
         /// <returns>A data transfer object representing the game.</returns>
         private GameDTO MapToGameDTO(Game gameEntity, User? gameOwnerEntity)
         {

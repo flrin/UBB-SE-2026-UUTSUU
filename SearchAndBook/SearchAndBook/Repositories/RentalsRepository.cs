@@ -1,26 +1,23 @@
-﻿using System;
+﻿namespace SearchAndBook.Repositories;
+using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using SearchAndBook.Domain;
 using SearchAndBook.Repositories.Sql;
 using SearchAndBook.Shared;
 
-namespace SearchAndBook.Repositories;
+// How ADO.NET handles connections :
+// - When you write using var connection = new SqlConnection(...) and call .Open(), Microsoft
+// checks the pool, so the pool of connections is handled by .net
+// - If there is a free connection, it gives it to you.
+// - When your "using" block finishes, it calls .Close().
+// - Microsoft intercepts your .Close() command. It doesn't actually destroy the connection
+// to the database. It just wipes the data clean and parks it back in the hidden pool for
+// the next person to use.
 
 /// <summary>
 /// Repository for managing rental data.
 /// </summary>
-/// 
-
-/// How ADO.NET handles connections : 
-/// - When you write using var connection = new SqlConnection(...) and call .Open(), Microsoft 
-/// checks the pool, so the pool of connections is handled by .net
-/// - If there is a free connection, it gives it to you.
-/// - When your "using" block finishes, it calls .Close().
-/// - Microsoft intercepts your .Close() command. It doesn't actually destroy the connection 
-/// to the database. It just wipes the data clean and parks it back in the hidden pool for 
-/// the next person to use.
-
 public class RentalsRepository : InterfaceRentalsRepository
 {
     /// <summary>
@@ -73,7 +70,7 @@ public class RentalsRepository : InterfaceRentalsRepository
 
             while (reader.Read())
             {
-				rentalTimeRanges.Add(new TimeRange(
+                rentalTimeRanges.Add(new TimeRange(
                     Convert.ToDateTime(reader["start_date"]),
                     Convert.ToDateTime(reader["end_date"])));
             }
@@ -110,7 +107,7 @@ public class RentalsRepository : InterfaceRentalsRepository
                 var start = Convert.ToDateTime(reader["start_date"]);
                 var end = Convert.ToDateTime(reader["end_date"]);
 
-				rentalTimeRanges.Add(new TimeRange(start, end));
+                rentalTimeRanges.Add(new TimeRange(start, end));
             }
 
             return rentalTimeRanges;

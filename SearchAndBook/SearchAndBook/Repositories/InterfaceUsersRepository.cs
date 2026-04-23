@@ -1,7 +1,9 @@
-﻿using SearchAndBook.Domain;
+﻿namespace SearchAndBook.Repositories;
+using SearchAndBook.Domain;
 
-namespace SearchAndBook.Repositories;
-
+/// <summary>
+/// Defines the repository operations for managing User entities.
+/// </summary>
 public interface InterfaceUsersRepository : IRepository<User>
 {
 }
