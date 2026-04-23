@@ -24,8 +24,52 @@
         private const long StartOfStreamPosition = 0;
         private const int MinimumBookingDayCount = 1;
         private const decimal DefaultTotalPrice = 0;
-        private readonly InterfaceBookingService BookingService;
-        private BookingDTO GameAndUserDetail;
+        private readonly InterfaceBookingService bookingService;
+        private BookingDTO gameAndUserDetail;
+        private TimeRange selectedTimeRange;
+        private decimal totalPrice;
+        private BitmapImage? ownerImage;
+        private BitmapImage? gameImage;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConfirmBookingViewModel"/> class.
+        /// </summary>
+        /// <param name="bookingService">The service used to manage bookings.</param>
+        /// <param name="gameAndUserDetails">The details of the game and the user.</param>
+        /// <param name="selectedTimeRange">The time range selected for the booking.</param>
+        public ConfirmBookingViewModel(InterfaceBookingService bookingService, BookingDTO gameAndUserDetails, TimeRange selectedTimeRange)
+        {
+            this.bookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
+            this.gameAndUserDetail = gameAndUserDetails ?? throw new ArgumentNullException(nameof(gameAndUserDetails));
+            this.selectedTimeRange = selectedTimeRange ?? throw new ArgumentNullException(nameof(selectedTimeRange));
+
+            try
+            {
+                this.bookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
+                this.GameAndUserDetails = gameAndUserDetails ?? throw new ArgumentNullException(nameof(gameAndUserDetails));
+                this.SelectedTimeRange = selectedTimeRange ?? throw new ArgumentNullException(nameof(selectedTimeRange));
+
+                this.UnavailableTimeRanges = this.bookingService.GetUnavailableTimeRanges(this.GameAndUserDetails.GameId) ?? Array.Empty<TimeRange>();
+                this.TotalPrice = this.CalculatePrice();
+                this.LoadImages();
+            }
+            catch (Exception exception)
+            {
+                this.RaiseError($"Could not initialize booking confirmation. {exception.Message}");
+                this.UnavailableTimeRanges = Array.Empty<TimeRange>();
+                this.TotalPrice = DefaultTotalPrice;
+            }
+        }
+
+        /// <summary>
+        /// Occurs when a request to navigate back to the previous screen is made.
+        /// </summary>
+        public event Action? OnGoBackRequested;
+
+        /// <summary>
+        /// Occurs when the user confirms the booking process.
+        /// </summary>
+        public event Action? OnConfirmBookingRequested;
 
         /// <summary>
         /// Occurs when a property value changes.
@@ -42,15 +86,81 @@
         public event Action<string>? OnErrorOccurred;
 
         /// <summary>
+        /// Gets the currently selected time range for the booking.
+        /// </summary>
+        public TimeRange SelectedTimeRange
+        {
+            get => this.selectedTimeRange;
+            private set
+            {
+                this.selectedTimeRange = value;
+                this.OnPropertyChanged();
+                this.OnPropertyChanged(nameof(this.NumberOfDays));
+                this.OnPropertyChanged(nameof(this.StartDate));
+                this.OnPropertyChanged(nameof(this.EndDate));
+            }
+        }
+
+        /// <summary>
+        /// Gets the total price calculated for the selected booking duration.
+        /// </summary>
+        public decimal TotalPrice
+        {
+            get => this.totalPrice;
+            private set
+            {
+                this.totalPrice = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the formatted start date string of the selected time range.
+        /// </summary>
+        public string StartDate => this.SelectedTimeRange?.StartTime.ToString("dd MMM yyyy") ?? "-";
+
+        /// <summary>
+        /// Gets the formatted end date string of the selected time range.
+        /// </summary>
+        public string EndDate => this.SelectedTimeRange?.EndTime.ToString("dd MMM yyyy") ?? "-";
+
+
+        /// <summary>
         /// Gets the combined details of the game and the associated user for the current booking.
         /// </summary>
         public BookingDTO GameAndUserDetails
         {
-            get => this.GameAndUserDetail;
+            get => this.gameAndUserDetail;
             private set
             {
-               this.GameAndUserDetail = value;
+               this.gameAndUserDetail = value;
                this.OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the profile image of the game owner.
+        /// </summary>
+        public BitmapImage? OwnerImage
+        {
+            get => this.ownerImage;
+            private set
+            {
+                this.ownerImage = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the display image of the game being booked.
+        /// </summary>
+        public BitmapImage? GameImage
+        {
+            get => this.gameImage;
+            private set
+            {
+                this.gameImage = value;
+                this.OnPropertyChanged();
             }
         }
 
@@ -59,122 +169,9 @@
         /// </summary>
         public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
 
-        private TimeRange _selectedTimeRange;
-
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-        public TimeRange SelectedTimeRange
-        {
-            get => _selectedTimeRange;
-            private set
-            {
-                _selectedTimeRange = value;
-                this.OnPropertyChanged();
-                this.OnPropertyChanged(nameof(NumberOfDays));
-                this.OnPropertyChanged(nameof(StartDate));
-                this.OnPropertyChanged(nameof(EndDate));
-            }
-        }
-
-        private decimal _totalPrice;
-
-        public decimal TotalPrice
-        {
-            get => this._totalPrice;
-            private set
-            {
-                this._totalPrice = value;
-                this.OnPropertyChanged();
-            }
-        }
-
-        public string StartDate => SelectedTimeRange?.StartTime.ToString("dd MMM yyyy") ?? "-";
-
-        public string EndDate => SelectedTimeRange?.EndTime.ToString("dd MMM yyyy") ?? "-";
-
-        private BitmapImage? _ownerImage;
-
-        public BitmapImage? OwnerImage
-        {
-            get => _ownerImage;
-            private set
-            {
-                _ownerImage = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private BitmapImage? _gameImage;
-
-        public BitmapImage? GameImage
-        {
-            get => _gameImage;
-            private set
-            {
-                _gameImage = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public event Action? OnGoBackRequested;
-
-        public event Action? OnConfirmBookingRequested;
-
-        public ConfirmBookingViewModel(InterfaceBookingService bookingService, BookingDTO gameAndUserDetails, TimeRange selectedTimeRange)
-        {
-            try
-            {
-                this.BookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
-                this.GameAndUserDetails = gameAndUserDetails ?? throw new ArgumentNullException(nameof(gameAndUserDetails));
-                this.SelectedTimeRange = selectedTimeRange ?? throw new ArgumentNullException(nameof(selectedTimeRange));
-
-                this.UnavailableTimeRanges = this.BookingService.GetUnavailableTimeRanges(this.GameAndUserDetails.GameId) ?? Array.Empty<TimeRange>();
-                this.TotalPrice = this.CalculatePrice();
-                this.LoadImages();
-            }
-            catch (Exception exception)
-            {
-                this.RaiseError($"Could not initialize booking confirmation. {exception.Message}");
-                this.UnavailableTimeRanges = Array.Empty<TimeRange>();
-                this.TotalPrice = DefaultTotalPrice;
-            }
-        }
-
-        private async void LoadImages()
-        {
-            try
-            {
-                if (this.GameAndUserDetails.Image != null && this.GameAndUserDetails.Image.Length > 0)
-                {
-                    using var stream = new InMemoryRandomAccessStream();
-                    await stream.WriteAsync(this.GameAndUserDetails.Image.AsBuffer());
-                    stream.Seek(StartOfStreamPosition);
-                    var bitmap = new BitmapImage();
-                    await bitmap.SetSourceAsync(stream);
-                    this.GameImage = bitmap;
-                }
-                else
-                {
-                    this.GameImage = null;
-                }
-
-                if (!string.IsNullOrEmpty(this.GameAndUserDetails.AvatarUrl))
-                {
-                    this.OwnerImage = new BitmapImage(new Uri(this.GameAndUserDetails.AvatarUrl));
-                }
-                else
-                {
-                    this.OwnerImage = null;
-                }
-            }
-            catch (Exception exception)
-            {
-                this.GameImage = null;
-                this.OwnerImage = null;
-                this.RaiseError($"Could not load images. {exception.Message}");
-            }
-        }
 
         /// <summary>
         /// Gets the number of days in the currently selected time range.
@@ -192,7 +189,7 @@
                         return MinimumBookingDayCount;
                     }
 
-                    return this.BookingService.CalculateNumberOfDaysInAGivenTimeRange(this.SelectedTimeRange);
+                    return this.bookingService.CalculateNumberOfDaysInAGivenTimeRange(this.SelectedTimeRange);
                 }
                 catch
                 {
@@ -217,7 +214,7 @@
                     return false;
                 }
 
-                return this.BookingService.CheckGameAvailability(this.GameAndUserDetails.GameId, timeRange);
+                return this.bookingService.CheckGameAvailability(this.GameAndUserDetails.GameId, timeRange);
             }
             catch (Exception exception)
             {
@@ -270,7 +267,7 @@
         {
             try
             {
-                return this.BookingService.CalculateTotalPriceForRentingASpecificGame(this.GameAndUserDetails.Price, this.SelectedTimeRange);
+                return this.bookingService.CalculateTotalPriceForRentingASpecificGame(this.GameAndUserDetails.Price, this.SelectedTimeRange);
             }
             catch (Exception exception)
             {
@@ -308,11 +305,6 @@
             }
         }
 
-        private void RaiseError(string message)
-        {
-            this.OnErrorOccurred?.Invoke(message);
-        }
-
         /// <summary>
         /// Determines whether the specified date falls within any unavailable time range.
         /// </summary>
@@ -336,6 +328,46 @@
             }
 
             return isUnavailable;
+        }
+
+        private void RaiseError(string message)
+        {
+            this.OnErrorOccurred?.Invoke(message);
+        }
+
+        private async void LoadImages()
+        {
+            try
+            {
+                if (this.GameAndUserDetails.Image != null && this.GameAndUserDetails.Image.Length > 0)
+                {
+                    using var stream = new InMemoryRandomAccessStream();
+                    await stream.WriteAsync(this.GameAndUserDetails.Image.AsBuffer());
+                    stream.Seek(StartOfStreamPosition);
+                    var bitmap = new BitmapImage();
+                    await bitmap.SetSourceAsync(stream);
+                    this.GameImage = bitmap;
+                }
+                else
+                {
+                    this.GameImage = null;
+                }
+
+                if (!string.IsNullOrEmpty(this.GameAndUserDetails.AvatarUrl))
+                {
+                    this.OwnerImage = new BitmapImage(new Uri(this.GameAndUserDetails.AvatarUrl));
+                }
+                else
+                {
+                    this.OwnerImage = null;
+                }
+            }
+            catch (Exception exception)
+            {
+                this.GameImage = null;
+                this.OwnerImage = null;
+                this.RaiseError($"Could not load images. {exception.Message}");
+            }
         }
     }
 }

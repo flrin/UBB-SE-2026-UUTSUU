@@ -1,3 +1,4 @@
+namespace SearchAndBook.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,23 +11,35 @@ using SearchAndBook.Services;
 using SearchAndBook.Shared;
 using SearchAndBook.ViewModels;
 
-namespace SearchAndBook.Views;
-
+/// <summary>
+/// Provides the user interface for confirming a booking, allowing date modification and final submission.
+/// </summary>
 public sealed partial class ConfirmBookingView : Page
 {
-    private const int MINIMUM_SELECTED_DATES = 1;
+    private const int MinimumSelectedDates = 1;
+    private DateTime? modifySelectedStart;
+    private DateTime? modifySelectedEnd;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConfirmBookingView"/> class.
+    /// </summary>
     public ConfirmBookingView()
     {
-        InitializeComponent();
+        this.InitializeComponent();
     }
 
+    /// <summary>
+    /// Invoked when the Page is loaded and becomes the current source of a parent Frame.
+    /// </summary>
+    /// <param name="eventArgs">Event data that can be examined by overriding code.</param>
     protected override void OnNavigatedTo(NavigationEventArgs eventArgs)
     {
         base.OnNavigatedTo(eventArgs);
 
         if (eventArgs.Parameter is not (BookingDTO bookingDTO, TimeRange range))
+        {
             return;
+        }
 
         var gameRepository = new GamesRepository();
         var rentalRepository = new RentalsRepository();
@@ -36,8 +49,10 @@ public sealed partial class ConfirmBookingView : Page
 
         viewModel.OnGoBackRequested += () =>
         {
-            if (Frame.CanGoBack)
-                Frame.GoBack();
+            if (this.Frame.CanGoBack)
+            {
+                this.Frame.GoBack();
+            }
         };
 
         viewModel.OnConfirmBookingRequested += async () =>
@@ -47,10 +62,10 @@ public sealed partial class ConfirmBookingView : Page
                 Title = "Success",
                 Content = "Booking request was sent successfully!",
                 CloseButtonText = "OK",
-                XamlRoot = this.XamlRoot
+                XamlRoot = this.XamlRoot,
             };
             await dialog.ShowAsync();
-            Frame.Navigate(typeof(DiscoveryView));
+            this.Frame.Navigate(typeof(DiscoveryView));
         };
 
         this.DataContext = viewModel;
@@ -61,9 +76,6 @@ public sealed partial class ConfirmBookingView : Page
         var viewModel = (ConfirmBookingViewModel)this.DataContext;
         viewModel.GoBack();
     }
-
-    private DateTime? _modifySelectedStart;
-    private DateTime? _modifySelectedEnd;
 
     private async void OnModifyClicked(object sender, RoutedEventArgs eventArgs)
     {
@@ -85,7 +97,6 @@ public sealed partial class ConfirmBookingView : Page
 
             bool isUnavailable = viewModel.IsTimeRangeUnavailable(date);
 
-
             if (isUnavailable)
             {
                 calendarArgumets.Item.IsBlackout = true;
@@ -93,8 +104,8 @@ public sealed partial class ConfirmBookingView : Page
                 return;
             }
 
-            if (_modifySelectedStart.HasValue && _modifySelectedEnd.HasValue &&
-                date.Date >= _modifySelectedStart.Value.Date && date.Date <= _modifySelectedEnd.Value.Date)
+            if (this.modifySelectedStart.HasValue && this.modifySelectedEnd.HasValue &&
+                date.Date >= this.modifySelectedStart.Value.Date && date.Date <= this.modifySelectedEnd.Value.Date)
             {
                 calendarArgumets.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod);
                 return;
@@ -106,23 +117,25 @@ public sealed partial class ConfirmBookingView : Page
         calendar.SelectedDatesChanged += (calendarSender, calendarArguments) =>
         {
             var selectedDates = calendarSender.SelectedDates;
-            if (selectedDates.Count > MINIMUM_SELECTED_DATES + 1)
+            if (selectedDates.Count > MinimumSelectedDates + 1)
             {
                 var toKeep = new List<DateTimeOffset>
                     {
                         selectedDates[selectedDates.Count - 2],
-                        selectedDates[selectedDates.Count - 1]
+                        selectedDates[selectedDates.Count - 1],
                     };
                 calendarSender.SelectedDates.Clear();
                 foreach (var date in toKeep)
+                {
                     calendarSender.SelectedDates.Add(date);
+                }
                 return;
             }
 
-            if (selectedDates.Count < MINIMUM_SELECTED_DATES)
+            if (selectedDates.Count < MinimumSelectedDates)
             {
-                _modifySelectedStart = null;
-                _modifySelectedEnd = null;
+                this.modifySelectedStart = null;
+                this.modifySelectedEnd = null;
                 return;
             }
 
@@ -131,8 +144,8 @@ public sealed partial class ConfirmBookingView : Page
                 .OrderBy(date => date)
                 .ToList();
 
-            _modifySelectedStart = sorted[0];
-            _modifySelectedEnd = sorted[sorted.Count - 1];
+            this.modifySelectedStart = sorted[0];
+            this.modifySelectedEnd = sorted[sorted.Count - 1];
 
             // force redraw
             var temporaryOffset = 1;
@@ -143,7 +156,9 @@ public sealed partial class ConfirmBookingView : Page
 
         calendar.SelectedDates.Add(viewModel.SelectedTimeRange.StartTime);
         if (viewModel.SelectedTimeRange.EndTime != viewModel.SelectedTimeRange.StartTime)
+        {
             calendar.SelectedDates.Add(viewModel.SelectedTimeRange.EndTime);
+        }
 
         var dialog = new ContentDialog
         {
@@ -151,7 +166,7 @@ public sealed partial class ConfirmBookingView : Page
             Content = calendar,
             PrimaryButtonText = "Confirm",
             CloseButtonText = "Cancel",
-            XamlRoot = this.XamlRoot
+            XamlRoot = this.XamlRoot,
         };
 
         var result = await dialog.ShowAsync();
@@ -159,8 +174,10 @@ public sealed partial class ConfirmBookingView : Page
         if (result == ContentDialogResult.Primary)
         {
             var selectedDates = calendar.SelectedDates;
-            if (selectedDates.Count < MINIMUM_SELECTED_DATES)
+            if (selectedDates.Count < MinimumSelectedDates)
+            {
                 return;
+            }
 
             var sorted = selectedDates
                 .Select(date => date.DateTime)
