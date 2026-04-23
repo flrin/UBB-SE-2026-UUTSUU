@@ -1,12 +1,25 @@
-﻿using Microsoft.Data.SqlClient;
+﻿namespace SearchAndBook.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.Data.SqlClient;
 
-namespace SearchAndBook.Shared;
-
+/// <summary>
+/// Provides methods for seeding the database with initial game image data.
+/// </summary>
+/// <remarks>This static class is intended for use during application setup or development to populate the
+/// database with image data for predefined games. It is not intended for use in production environments. All methods
+/// are static and thread safety is not guaranteed.</remarks>
 public static class DatabaseSeeder
 {
+    /// <summary>
+    /// Seeds the database with image data for predefined games by updating the image column for each game that does not
+    /// already have an image.
+    /// </summary>
+    /// <remarks>This method locates image files in the 'Assets/SeedImages' directory relative to the project
+    /// root and updates the corresponding records in the 'Games' table where the image is currently null. Only games
+    /// with matching image files and without existing images are affected. The method must be run with appropriate
+    /// database access and file system permissions.</remarks>
     public static void SeedGameImages()
     {
         string basePath = AppContext.BaseDirectory;
@@ -49,7 +62,7 @@ public static class DatabaseSeeder
             { 31, "KingOfTokyo.jpg" },
             { 32, "SheriffOfNottingham.jpg" },
             { 33, "Mysterium.jpg" },
-            { 34, "Clank!.jpg" }
+            { 34, "Clank!.jpg" },
         };
 
         using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
@@ -67,7 +80,8 @@ public static class DatabaseSeeder
 
             byte[] imageBytes = File.ReadAllBytes(filePath);
 
-            using var command = new SqlCommand(@"
+            using var command = new SqlCommand(
+                @"
                 UPDATE dbo.Games
                 SET image = @Image
                 WHERE game_id = @GameId

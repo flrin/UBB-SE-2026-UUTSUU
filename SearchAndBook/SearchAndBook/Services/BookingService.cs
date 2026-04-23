@@ -61,7 +61,7 @@ public class BookingService : InterfaceBookingService
                 Price = bookedGame.Price,
                 City = gameOwner.City,
                 MinimumNrPlayers = bookedGame.MinimumPlayerNumber,
-                MaximumNrPlayers = bookedGame.MaximumPlayerNumber,
+                MaximumNumberPlayers = bookedGame.MaximumPlayerNumber,
                 Description = bookedGame.Description,
                 UserId = gameOwner.UserId,
                 DisplayName = gameOwner.DisplayName,

@@ -81,7 +81,7 @@
                                 <TextBlock VerticalAlignment="Center">
                                     <Run Text="{Binding GameAndUserDetails.MinimumNrPlayers}"/>
                                     <Run Text=" – "/>
-                                    <Run Text="{Binding GameAndUserDetails.MaximumNrPlayers}"/>
+                                    <Run Text="{Binding GameAndUserDetails.MaximumNumberPlayers}"/>
                                     <Run Text=" players"/>
                                 </TextBlock>
                             </StackPanel>

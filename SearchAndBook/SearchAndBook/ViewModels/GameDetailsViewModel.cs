@@ -14,7 +14,7 @@ namespace SearchAndBook.ViewModels
 {
     public class GameDetailsViewModel : INotifyPropertyChanged
     {
-        private const long UNREGISTERED_USER_ID = -1;
+        private const long UnregisteredUserID = -1;
         private const long START_OF_STREAM_POSTION = 0;
         private const decimal DefaultTotalPrice = 0;
 
@@ -220,7 +220,7 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                if (SessionContext.GetInstance().UserId == UNREGISTERED_USER_ID)
+                if (SessionContext.GetInstance().UserId == UnregisteredUserID)
                 {
                     OnMessageRequested?.Invoke("User not logged in. Please log in first");
 
