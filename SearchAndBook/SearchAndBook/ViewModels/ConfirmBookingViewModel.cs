@@ -61,6 +61,9 @@
             }
         }
 
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
+           => this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
         /// <summary>
         /// Occurs when a request to navigate back to the previous screen is made.
         /// </summary>
@@ -124,7 +127,6 @@
         /// </summary>
         public string EndDate => this.SelectedTimeRange?.EndTime.ToString("dd MMM yyyy") ?? "-";
 
-
         /// <summary>
         /// Gets the combined details of the game and the associated user for the current booking.
         /// </summary>
@@ -168,10 +170,6 @@
         /// Gets the collection of time ranges during which the resource is unavailable.
         /// </summary>
         public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
-
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
-            => this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
 
         /// <summary>
         /// Gets the number of days in the currently selected time range.

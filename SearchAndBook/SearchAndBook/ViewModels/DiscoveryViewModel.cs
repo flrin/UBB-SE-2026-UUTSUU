@@ -88,22 +88,22 @@
         /// </summary>
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private int TotalGamesCount => this.totalAvailableGamesCount;
-
         /// <summary>
         /// Gets or sets the list of games available for rent tonight.
         /// </summary>
-        public List<GameDTO> AvailableTonightGames { get; set; } = new();
+        public List<GameDTO> AvailableTonightGames { get; set; } = new ();
 
         /// <summary>
         /// Gets or sets the list of other available games that do not match the "tonight" criteria.
         /// </summary>
-        public List<GameDTO> OtherAvailableGames { get; set; } = new();
+        public List<GameDTO> OtherAvailableGames { get; set; } = new ();
 
         /// <summary>
         /// Gets a value indicating whether the end date selection is enabled based on the start date.
         /// </summary>
         public bool IsEndDateEnabled => this.SelectedStartDate.HasValue;
+
+        private int TotalGamesCount => this.totalAvailableGamesCount;
 
         /// <summary>
         /// Gets or sets a value indicating whether the header for "Other games" should be visible.
@@ -245,8 +245,7 @@
         /// <summary>
         /// Gets the collection of city suggestions based on the current search text.
         /// </summary>
-        public ObservableCollection<string> CitySuggestions { get; } = new();
-
+        public ObservableCollection<string> CitySuggestions { get; } = new ();
 
         /// <summary>
         /// Gets the command to navigate to the next page.
@@ -266,7 +265,7 @@
         /// <summary>
         /// Gets the message to be displayed when no games match the discovery or search criteria.
         /// </summary>
-        public string NoResultsMessage => this.TotalGamesCount == NoGamesAvailable ? "No games available." : "";
+        public string NoResultsMessage => this.TotalGamesCount == NoGamesAvailable ? "No games available." : string.Empty;
 
         /// <summary>
         /// Loads paginated discovery feed and updates UI properties.
@@ -290,7 +289,7 @@
                 this.OnPropertyChanged(nameof(this.TotalPages));
                 this.OnPropertyChanged(nameof(this.AvailableTonightGames));
                 this.OnPropertyChanged(nameof(this.OtherAvailableGames));
-                this.OnPropertyChanged(nameof(this.NoResultsMessage)); 
+                this.OnPropertyChanged(nameof(this.NoResultsMessage));
             }
             catch (Exception exception)
             {
@@ -314,7 +313,7 @@
             }
             catch (Exception ex)
             {
-               this.OnErrorOccurred?.Invoke($"Could not go to next page. {ex.Message}");
+                this.OnErrorOccurred?.Invoke($"Could not go to next page. {ex.Message}");
             }
         }
 

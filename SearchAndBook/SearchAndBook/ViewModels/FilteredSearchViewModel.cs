@@ -510,7 +510,10 @@
                 this.CurrentFilter.Name = null;
                 this.ApplyFilters();
             }
-            catch (Exception ex) { this.RaiseError($"Could not remove name filter. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not remove name filter. {ex.Message}");
+            }
         }
 
         /// <summary>Removes the city filter from <see cref="CurrentFilter"/> and re-applies the remaining filters.</summary>
@@ -521,7 +524,10 @@
                 this.CurrentFilter.City = null;
                 this.ApplyFilters();
             }
-            catch (Exception ex) { this.RaiseError($"Could not remove city filter. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not remove city filter. {ex.Message}");
+            }
         }
 
         /// <summary>Removes the maximum-price filter from <see cref="CurrentFilter"/> and re-applies the remaining filters.</summary>
@@ -532,7 +538,10 @@
                 this.CurrentFilter.MaximumPrice = null;
                 this.ApplyFilters();
             }
-            catch (Exception ex) { this.RaiseError($"Could not remove price filter. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not remove price filter. {ex.Message}");
+            }
         }
 
         /// <summary>Removes the player-count filter from <see cref="CurrentFilter"/> and re-applies the remaining filters.</summary>
@@ -543,7 +552,10 @@
                 this.CurrentFilter.PlayerCount = null;
                 this.ApplyFilters();
             }
-            catch (Exception ex) { this.RaiseError($"Could not remove players filter. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not remove players filter. {ex.Message}");
+            }
         }
 
         /// <summary>Removes the availability-date filter from <see cref="CurrentFilter"/> and re-applies the remaining filters.</summary>
@@ -554,7 +566,10 @@
                 this.CurrentFilter.AvailabilityRange = null;
                 this.ApplyFilters();
             }
-            catch (Exception ex) { this.RaiseError($"Could not remove date filter. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not remove date filter. {ex.Message}");
+            }
         }
 
         /// <summary>Sets the sort order to <see cref="SortOption.PriceAscending"/> and re-applies filters.</summary>
@@ -565,7 +580,10 @@
                 this.CurrentFilter.SortOption = SortOption.PriceAscending;
                 this.ApplyFilters();
             }
-            catch (Exception ex) { this.RaiseError($"Could not sort by ascending price. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not sort by ascending price. {ex.Message}");
+            }
         }
 
         /// <summary>Sets the sort order to <see cref="SortOption.PriceDescending"/> and re-applies filters.</summary>
@@ -576,7 +594,10 @@
                 this.CurrentFilter.SortOption = SortOption.PriceDescending;
                 this.ApplyFilters();
             }
-            catch (Exception ex) { this.RaiseError($"Could not sort by descending price. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not sort by descending price. {ex.Message}");
+            }
         }
 
         /// <summary>Clears the sort option (<see cref="SortOption.None"/>) and re-applies filters.</summary>
@@ -587,7 +608,10 @@
                 this.CurrentFilter.SortOption = SortOption.None;
                 this.ApplyFilters();
             }
-            catch (Exception ex) { this.RaiseError($"Could not clear sorting. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not clear sorting. {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -670,8 +694,14 @@
         /// <param name="gameId">The ID of the game to navigate to.</param>
         public void SelectGame(int gameId)
         {
-            try { this.OnGameSelectedRequest?.Invoke(gameId); }
-            catch (Exception ex) { this.RaiseError($"Could not navigate to game details. {ex.Message}"); }
+            try
+            {
+                this.OnGameSelectedRequest?.Invoke(gameId);
+            }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not navigate to game details. {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -718,34 +748,6 @@
             }
         }
 
-        /// <summary>Moves to the next page of results if the current page is not the last one.</summary>
-        public void NextPage()
-        {
-            try
-            {
-                if (this.CurrentPage * ItemsPerPage < this.Games.Count)
-                {
-                    this.CurrentPage++;
-                    this.RefreshPage();
-                }
-            }
-            catch (Exception ex) { this.RaiseError($"Could not go to next page. {ex.Message}"); }
-        }
-
-        /// <summary>Moves to the previous page of results if the current page is not the first one.</summary>
-        public void PreviousPage()
-        {
-            try
-            {
-                if (this.CurrentPage > MinimumPageNumber)
-                {
-                    this.CurrentPage--;
-                    this.RefreshPage();
-                }
-            }
-            catch (Exception ex) { this.RaiseError($"Could not go to previous page. {ex.Message}"); }
-        }
-
         /// <summary>
         /// Gets or sets the text currently entered in the city search box.
         /// Writing to this property updates <see cref="CurrentFilter"/>.<see cref="FilterCriteria.City"/>
@@ -763,6 +765,40 @@
                     this.CurrentFilter.City = value;
                     this.UpdateCitySuggestions(value);
                 }
+            }
+        }
+
+        /// <summary>Moves to the next page of results if the current page is not the last one.</summary>
+        public void NextPage()
+        {
+            try
+            {
+                if (this.CurrentPage * ItemsPerPage < this.Games.Count)
+                {
+                    this.CurrentPage++;
+                    this.RefreshPage();
+                }
+            }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not go to next page. {ex.Message}");
+            }
+        }
+
+        /// <summary>Moves to the previous page of results if the current page is not the first one.</summary>
+        public void PreviousPage()
+        {
+            try
+            {
+                if (this.CurrentPage > MinimumPageNumber)
+                {
+                    this.CurrentPage--;
+                    this.RefreshPage();
+                }
+            }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not go to previous page. {ex.Message}");
             }
         }
 
@@ -812,7 +848,10 @@
 
                 this.OnPropertyChanged(nameof(this.VisibleGames));
             }
-            catch (Exception ex) { this.RaiseError($"Could not refresh the page. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not refresh the page. {ex.Message}");
+            }
         }
 
         /// <summary>Fires <see cref="OnGoBackRequest"/> to tell the view to navigate back.</summary>
@@ -822,7 +861,10 @@
             {
                 this.OnGoBackRequest?.Invoke();
             }
-            catch (Exception ex) { this.RaiseError($"Could not go back. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                this.RaiseError($"Could not go back. {ex.Message}");
+            }
         }
 
         /// <summary>
