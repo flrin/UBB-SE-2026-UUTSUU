@@ -232,7 +232,7 @@ public class GameDetailsViewModelTests
             Price = 10,
             City = "Cluj",
             MinimumNrPlayers = 2,
-            MaximumNrPlayers = 4,
+            MaximumNumberPlayers = 4,
             Description = "desc",
             UserId = 1,
             DisplayName = "Owner"

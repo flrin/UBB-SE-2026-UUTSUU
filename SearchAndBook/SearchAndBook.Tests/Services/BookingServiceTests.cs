@@ -29,7 +29,7 @@ public class BookingServiceTests
             Price = game.Price,
             City = owner.City,
             MinimumNrPlayers = game.MinimumPlayerNumber,
-            MaximumNrPlayers = game.MaximumPlayerNumber,
+            MaximumNumberPlayers = game.MaximumPlayerNumber,
             Description = game.Description,
             UserId = owner.UserId,
             DisplayName = owner.DisplayName,
